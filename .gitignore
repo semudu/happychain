@@ -1,0 +1,5 @@
+.gitconfig
+.vscode/
+.idea/
+.gitsecret/keys/random_seed
+config.py

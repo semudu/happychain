@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+flask = "*"
+mysql-connector-python = "*"
+base58 = "*"
+ecdsa = "*"
+unidecode = "*"
+requests = "*"
+bipwrapper = {editable = true,git = "https://github.com/semudu/bip-api"}
+
+[requires]
+python_version = "3.7"
