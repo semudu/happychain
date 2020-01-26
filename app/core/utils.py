@@ -1,19 +1,18 @@
-import base58
 import binascii
 import codecs
-import ecdsa
 import hashlib
 import os
 import re
 from datetime import datetime
 
+import base58
+import ecdsa
 import unidecode
-from ecdsa import SigningKey
-from ecdsa import VerifyingKey
+from ecdsa import SigningKey, VerifyingKey
 
 
 def hash_password(password):
-    """Hash a password for storing."""
+    """hash a password for storing."""
     salt = hashlib.sha256(os.urandom(60)).hexdigest().encode('ascii')
     pwdhash = hashlib.pbkdf2_hmac('sha512', password.encode('utf-8'),
                                   salt, 100000)
@@ -22,7 +21,7 @@ def hash_password(password):
 
 
 def verify_password(stored_password, provided_password):
-    """Verify a stored password against one provided by user"""
+    """verify a stored password against one provided by user"""
     salt = stored_password[:64]
     stored_password = stored_password[64:]
     pwdhash = hashlib.pbkdf2_hmac('sha512',
@@ -35,7 +34,7 @@ def verify_password(stored_password, provided_password):
 
 def get_keys():
     keys = {}
-    sk = SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+    sk = SigningKey.generate(curve=ecdsa.secp256k1, hashfunc=hashlib.sha256)
     prkey = sk.to_string()
     keys['private_key'] = codecs.encode(prkey, 'hex').decode("utf-8")
 
@@ -54,8 +53,8 @@ def get_keys():
 
 
 def get_sign(wallet_key, public_key, private_key):
-    sk = SigningKey.from_string(private_key, curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
-    vk = VerifyingKey.from_string(public_key, curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+    sk = SigningKey.from_string(private_key, curve=ecdsa.secp256k1, hashfunc=hashlib.sha256)
+    vk = VerifyingKey.from_string(public_key, curve=ecdsa.secp256k1, hashfunc=hashlib.sha256)
     sig = sk.sign(wallet_key.encode())
 
     return codecs.encode(sig, 'hex').decode("utf-8")
@@ -74,3 +73,27 @@ def json_default(value):
         return "%s/%s/%s %s:%s:%s" % (value.day, value.month, value.year, value.hour, value.minute, value.second)
     else:
         return value.__dict__
+
+
+def get_key_value_tuple(data: dict, key: str, value: str):
+    result = []
+    for row in data:
+        result.append((row[key], row[value]))
+    return result
+
+
+def get_name_with_suffix(name) -> str:
+    vowels = 'aıouAIOUeiöüEİÖÜ'
+
+    if vowels.find(str(name[-1:])) != -1:
+        if vowels.find(str(name[-1:])) < 9:
+            return "%s'ya" % name
+        else:
+            return "%s'ye" % name
+    else:
+        if vowels.find(str(name[-2:1])) < 9:
+            return "%s'a" % name
+        else:
+            return "%s'e" % name
+
+    return name

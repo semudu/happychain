@@ -142,7 +142,7 @@ class Content:
 
     @ctype.setter
     def ctype(self, value):
-        self.__ctype = value.lower()
+        self.__ctype = value.lower() if value else ""
 
     @property
     def postback(self):
@@ -162,7 +162,7 @@ class Content:
     @poll.setter
     def poll(self, value):
         if value:
-            self.__poll = KeyValuePair(value.get("pollid"), split_to_array(value.get("optionids"), '-'))
+            self.__poll = KeyValuePair(value.get("pollid"), value.get("optionids"))
         else:
             self.__poll = KeyValuePair(None, None)
 

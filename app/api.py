@@ -89,18 +89,21 @@ def create_app(config):
         try:
             if request.is_json:
                 content = request.get_json()
-                full_name = content["full_name"]
+                first_name = content["first_name"]
+                last_name = content["last_name"]
+                gender = content["gender"]
+                date_of_birth = content["date_of_birth"]
                 msisdn = content["msisdn"]
                 passwd = content["passwd"]
                 team_id = content["team_id"]
-                if full_name and msisdn and passwd and team_id:
-                    db.add_user(msisdn, full_name, passwd, team_id)
+                if first_name and last_name and gender and date_of_birth and msisdn and passwd and team_id:
+                    db.add_user(msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id)
                     return "User Created.", 201
                 else:
-                    return "full_name, msisdn, passwd or team_id is empty!", 500
+                    return "first_name, last_name, gender, date_of_birth, msisdn, passwd or team_id is empty!", 500
         except Exception as e:
             print("User create exception: %s" % str(e))
-            return "An error occured", 500
+            return "An error occurred", 500
 
     @app.route("/user/<id>", methods=["DELETE"])
     def delete_user(id):
@@ -120,11 +123,10 @@ def create_app(config):
             return "An error occurred", 500
 
     @app.route("/bip", methods=["POST"])
-    def bip():
+    def bip_process():
         if request.is_json:
             logging.debug(request.get_json())
             bip.process_request(Content(request.get_json()))
-
             return 'JSON posted'
         else:
             return "Content Type must be JSON!"
