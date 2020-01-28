@@ -5,7 +5,7 @@ from bipwrapper.type import *
 
 from .blockchain import Blockchain
 from .database import Database
-from .model.costants import *
+from .model.constants import *
 from .utils import *
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)

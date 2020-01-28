@@ -2,7 +2,8 @@ import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
 
-from .utils import hash_password, get_keys, convert_to_date
+from .model.constants import Globals
+from .utils import hash_password, convert_to_date
 
 
 class Database:
@@ -124,13 +125,15 @@ class Database:
         return len(result) > 0 if result[0]["id"] else -1
 
     def add_user(self, msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id):
-        sql = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id) values (%s,upper(%s),%s,%s);"
+        sql = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id) values (%s,upper(%s),upper(%s),%s,%s,%s,%s);"
         user_id = self.__execute(sql, (
         msisdn, first_name, last_name, gender, convert_to_date(date_of_birth, "%d.%m.%Y"), hash_password(passwd),
         team_id), True)
-        keys = get_keys()
-        sql = "insert into wallet (wallet_key,public_key,private_key,user_id) values (%s,%s,%s,%s);"
-        wallet_id = self.__execute(sql, (keys['wallet_key'], keys['public_key'], keys['private_key'], user_id), True)
+        # keys = get_keys()
+        # sql = "insert into wallet (wallet_key,public_key,private_key,user_id) values (%s,%s,%s,%s);"
+        # wallet_id = self.__execute(sql, (keys['wallet_key'], keys['public_key'], keys['private_key'], user_id), True)
+        sql = "insert into wallet (user_id, balance) values (%s%s);"
+        wallet_id = self.__execute(sql, (user_id, Globals.LOAD_BALANCE_AMOUNT))
         return {
             "user_id": user_id,
             "wallet_id": wallet_id
@@ -174,22 +177,22 @@ class Database:
 
     def get_total_sent_transaction(self, user_id):
         result = self.__fetchone(
-            "SELECT sum(amount) total_sent FROM `transaction` WHERE is_active = 1 and is_succeed = 1 and sender_id = %s",
+            "SELECT sum(amount) total_sent FROM transaction WHERE is_active = 1 and sender_id = %s",
             (user_id,))
         return result if result else 0
 
     def get_total_received_transaction(self, user_id):
         result = self.__fetchone(
-            "SELECT sum(amount) total_received FROM `transaction` WHERE is_active = 1 and is_succeed = 1 and receiver_id = %s",
+            "SELECT sum(amount) total_received FROM transaction WHERE is_active = 1 and receiver_id = %s",
             (user_id,))
         return result if result else 0
 
     def get_lastn_sent(self, user_id, count):
-        sql = 'select distinct u.full_name, r.text, date_format(t.transaction_date,"%d %M, %W") date from transaction t, user u, reason r where t.receiver_id = u.id and t.reason_id = r.id and t.is_active = 1 and t.is_succeed = 1 and t.sender_id = %s order by t.transaction_date desc limit %s;'
+        sql = 'select distinct u.full_name, r.text, date_format(t.transaction_date,"%d %M, %W") date from transaction t, user u, reason r where t.receiver_id = u.id and t.reason_id = r.id and t.is_active = 1 and t.sender_id = %s order by t.transaction_date desc limit %s;'
         return self.__fetchall(sql, (user_id, count))
 
     def get_lastn_received(self, user_id, count):
-        sql = 'select distinct u.full_name, r.text, date_format(t.transaction_date,"%d %M, %W") date from transaction t, user u, reason r where t.sender_id = u.id and t.reason_id = r.id and t.is_active = 1 and t.is_succeed = 1 and t.receiver_id = %s order by t.transaction_date desc limit %s;'
+        sql = 'select distinct u.full_name, r.text, date_format(t.transaction_date,"%d %M, %W") date from transaction t, user u, reason r where t.sender_id = u.id and t.reason_id = r.id and t.is_active = 1 and t.receiver_id = %s order by t.transaction_date desc limit %s;'
         return self.__fetchall(sql, (user_id, count))
 
     def get_reasons_by_scope(self, scope_id):

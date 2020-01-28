@@ -34,7 +34,7 @@ def verify_password(stored_password, provided_password):
 
 def get_keys():
     keys = {}
-    sk = SigningKey.generate(curve=ecdsa.secp256k1, hashfunc=hashlib.sha256)
+    sk = SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
     prkey = sk.to_string()
     keys['private_key'] = codecs.encode(prkey, 'hex').decode("utf-8")
 
@@ -53,8 +53,8 @@ def get_keys():
 
 
 def get_sign(wallet_key, public_key, private_key):
-    sk = SigningKey.from_string(private_key, curve=ecdsa.secp256k1, hashfunc=hashlib.sha256)
-    vk = VerifyingKey.from_string(public_key, curve=ecdsa.secp256k1, hashfunc=hashlib.sha256)
+    sk = SigningKey.from_string(private_key, curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+    vk = VerifyingKey.from_string(public_key, curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
     sig = sk.sign(wallet_key.encode())
 
     return codecs.encode(sig, 'hex').decode("utf-8")

@@ -12,6 +12,8 @@ base58 = "*"
 ecdsa = "*"
 unidecode = "*"
 requests = "*"
+schedule = "*"
+pycron = "*"
 bipwrapper = {editable = true,git = "https://github.com/semudu/bip-api"}
 
 [requires]
