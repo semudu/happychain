@@ -15,19 +15,18 @@ class Database:
                                                                                user=config.DB_USER,
                                                                                password=config.DB_PASSWD,
                                                                                charset="utf8",
-                                                                               autocommit=True,
                                                                                pool_size=3)
+
         except Error as e:
             print("Error while connecting to MySQL", e)
 
-    def __fetchone(self, sql: str, input: tuple = ()) -> dict:
-        connection_object = None
+    def __fetchone(self, sql: str, params: tuple = ()) -> dict:
         try:
-            connection_object = self.connection_pool.get_connection()
+            conn = self.connection_pool.get_connection()
 
-            if connection_object.is_connected():
-                cursor = connection_object.cursor(prepared=True)
-                cursor.execute(sql, input)
+            if conn.is_connected():
+                cursor = conn.cursor(prepared=True)
+                cursor.execute(sql, params)
                 result = cursor.fetchone()
                 return result if result[0] else None
             else:
@@ -35,18 +34,17 @@ class Database:
         except Error as e:
             raise e
         finally:
-            if connection_object and connection_object.is_connected():
+            if conn is not None and conn.is_connected():
                 cursor.close()
-                connection_object.close()
+                conn.close()
 
-    def __fetchall(self, sql: str, input: tuple = ()) -> dict:
-        connection_object = None
+    def __fetchall(self, sql: str, params: tuple = ()) -> dict:
         try:
-            connection_object = self.connection_pool.get_connection()
+            conn = self.connection_pool.get_connection()
 
-            if connection_object.is_connected():
-                cursor = connection_object.cursor(prepared=True)
-                cursor.execute(sql, input)
+            if conn.is_connected():
+                cursor = conn.cursor(prepared=True)
+                cursor.execute(sql, params)
                 row_headers = [x[0] for x in cursor.description]
                 row_values = cursor.fetchall()
                 json_result = []
@@ -59,17 +57,16 @@ class Database:
         except Error as e:
             raise e
         finally:
-            if connection_object and connection_object.is_connected():
+            if conn is not None and conn.is_connected():
                 cursor.close()
-                connection_object.close()
+                conn.close()
 
-    def __execute(self, sql: str, input: tuple, insert: bool) -> object:
+    def __execute_with_connection(self, conn: object, sql: str, params: tuple, insert: bool) -> object:
         try:
-            connection_object = self.connection_pool.get_connection()
-
-            if connection_object.is_connected():
-                cursor = connection_object.cursor(prepared=True)
-                result = cursor.execute(sql, input)
+            if conn.is_connected():
+                cursor = conn.cursor(prepared=True)
+                result = cursor.execute(sql, params)
+                conn.commit()
                 if insert:
                     return cursor.lastrowid
                 else:
@@ -80,9 +77,18 @@ class Database:
         except Error as e:
             raise e
         finally:
-            if (connection_object.is_connected()):
+            if conn is not None and conn.is_connected():
                 cursor.close()
-                connection_object.close()
+
+    def __execute(self, sql: str, params: tuple, insert: bool):
+        try:
+            conn = self.connection_pool.get_connection()
+            return self.__execute_with_connection(conn, sql, params, insert)
+        except Error as e:
+            raise e
+        finally:
+            if conn is not None and conn.is_connected():
+                conn.close()
 
     def add_scope(self, scope_name):
         sql = "insert into scope (`name`) values (%s);"
@@ -127,8 +133,8 @@ class Database:
     def add_user(self, msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id):
         sql = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id) values (%s,upper(%s),upper(%s),%s,%s,%s,%s);"
         user_id = self.__execute(sql, (
-        msisdn, first_name, last_name, gender, convert_to_date(date_of_birth, "%d.%m.%Y"), hash_password(passwd),
-        team_id), True)
+            msisdn, first_name, last_name, gender, convert_to_date(date_of_birth, "%d.%m.%Y"), hash_password(passwd),
+            team_id), True)
         # keys = get_keys()
         # sql = "insert into wallet (wallet_key,public_key,private_key,user_id) values (%s,%s,%s,%s);"
         # wallet_id = self.__execute(sql, (keys['wallet_key'], keys['public_key'], keys['private_key'], user_id), True)
@@ -202,3 +208,51 @@ class Database:
               "and (special_date is null or special_date = CURRENT_DATE()) " \
               "order by special_date desc, id asc;"
         return self.__fetchall(sql, (scope_id,))
+
+    def get_balance(self, user_id):
+        result = self.__fetchone("select balance from wallet where user_id = %s;", (user_id,))
+        return float(result[0]) if result else 0
+
+    def transfer_points(self, sender_id, receiver_id, reason_id):
+        try:
+            conn = self.connection_pool.get_connection()
+            self.__execute_with_connection(conn,
+                                           "insert into transaction (sender_id, receiver_id, amount, transaction_date, reason_id, is_active) values (%s,%s,%s,CURDATE(),%s,1);"
+                                           , (sender_id, receiver_id, Globals.SEND_AMOUNT, reason_id),
+                                           True)
+
+            self.__execute_with_connection(conn,
+                                           "update wallet set balance = balance - %s where user_id = %s",
+                                           (Globals.SEND_AMOUNT - Globals.EARN_AMOUNT, sender_id),
+                                           True)
+
+            self.__execute_with_connection(conn,
+                                           "update wallet set balance = balance + %s where user_id = %s",
+                                           (Globals.SEND_AMOUNT, receiver_id),
+                                           True)
+            conn.commit()
+
+        except Error as e:
+            if conn is not None and conn.is_connected():
+                conn.rollback()
+                raise e
+        finally:
+            if conn is not None and conn.is_connected():
+                conn.close()
+
+    def check_user_limit(self, sender_id, receiver_id) -> bool:
+        count = self.__fetchone(
+            "select count(*) from transaction where sender_id = %s and receiver_id = %s and transaction_date = curdate() and is_active = 1;",
+            (sender_id, receiver_id))
+        if count is not None and count[0] > Globals.SEND_SAME_PERSON_LIMIT:
+            return False
+
+        return True
+
+    def check_team_limit(self, sender_id, receiver_id):
+        count = self.__fetchone(
+            "select count(*) from transaction t, user u where t.sender_id = u.id and t.transaction_date = curdate() and t.is_active = 1 and u.team_id = (select team_id from user where id = receiver_id)")
+        if count is not None and count[0] > Globals.SEND_SAME_TEAM_LIMIT:
+            return False
+
+        return True

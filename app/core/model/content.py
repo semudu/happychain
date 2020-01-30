@@ -162,9 +162,10 @@ class Content:
     @poll.setter
     def poll(self, value):
         if value:
-            self.__poll = KeyValuePair(value.get("pollid"), value.get("optionids"))
+            self.__poll = KeyValuePair(split_to_array(value.get("pollid"), '-') if value.get("pollid") else [""],
+                                       value.get("optionids"))
         else:
-            self.__poll = KeyValuePair(None, None)
+            self.__poll = KeyValuePair([None], [None])
 
     @property
     def commands(self):
@@ -179,14 +180,24 @@ class Content:
         return self.__postback.value
 
     @property
-    def pollid(self):
-        return self.__poll.id
+    def poll_id(self):
+        return self.__poll.id[0]
 
+    @property
+    def poll_value(self):
+        return self.__poll.value[0]
+
+    @property
+    def poll_ext(self):
+        return self.__poll.id[1]
+
+    @property
     def next_command(self, index=1):
         if len(self.__commands) > index:
             return self.__commands[index]
         return None
 
+    @property
     def toJSON(self):
         return json.dumps(self, default=json_default,
                           sort_keys=True, indent=4)

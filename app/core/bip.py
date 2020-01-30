@@ -17,35 +17,35 @@ class Bip:
         self.blockchain = Blockchain(config)
         self.api = Api(config.BIP_URL, config.BIP_USERNAME, config.BIP_PASSWORD)
 
-    def __send_menu__(self, receiver):
-        self.api.one.send_quickreply_message(receiver, Poll.MENU, [
+    def __send_menu__(self, msisdn):
+        self.api.one.send_quickreply_message(msisdn, Poll.MENU, [
             (Command.POINT, "💰 IMS Bakiyem", ButtonType.POST_BACK),
             (Command.LAST_SENT + "-5", "➡️ Son Yolladıklarım", ButtonType.POST_BACK),
             (Command.LAST_RECEIVED + "-5", "⬅️ Son gelenler", ButtonType.POST_BACK),
             (Command.HELP, "❓ Yardım", ButtonType.POST_BACK)
         ])
 
-    def __send_balance__(self, receiver, user_id):
+    def __send_balance__(self, msisdn, user_id):
         balance = self.blockchain.get_balance(user_id)
         total_send = self.db.get_total_sent_transaction(user_id)
         total_received = self.db.get_total_received_transaction(user_id)
-        self.api.one.send_text_message(receiver, Message.BALANCE % (balance, total_send, total_received))
+        self.api.one.send_text_message(msisdn, Message.BALANCE % (balance, total_send, total_received))
 
-    def __send_lastn_sent(self, receiver, user_id, count):
+    def __send_lastn_sent(self, msisdn, user_id, count):
         text = Message.LAST_SENT % count
         result = self.db.get_lastn_sent(user_id, count)
         for row in result:
             text += row["full_name"] + "\n" + row["text"] + "\n" + row["date"]
-        self.api.one.send_text_message(receiver, text)
+        self.api.one.send_text_message(msisdn, text)
 
-    def __send_lastn_received(self, receiver, user_id, count):
+    def __send_lastn_received(self, msisdn, user_id, count):
         text = Message.LAST_RECEIVED % count
         result = self.db.get_lastn_received(user_id, count)
         for row in result:
             text += row["full_name"] + "\n" + row["text"] + "\n" + row["date"]
-        self.api.one.send_text_message(receiver, text)
+        self.api.one.send_text_message(msisdn, text)
 
-    def __send_user_list(self, receiver, user_id, start_with):
+    def __send_user_list(self, msisdn, user_id, start_with):
         if len(start_with) > 0:
             scope_id = self.db.get_user_scope_id(user_id)
             user_list = self.db.get_users_by_scope(scope_id, start_with)
@@ -53,7 +53,7 @@ class Bip:
                 if len(user_list) > 1:
                     user_tuple = get_key_value_tuple(user_list, "id", "full_name")
                     self.api.one.send_poll_message(
-                        receiver,
+                        msisdn,
                         Poll.SHORT_LIST,
                         Message.SHORT_LIST_TITLE % start_with,
                         Message.SHORT_LIST_DESC % Globals.SEND_AMOUNT,
@@ -68,7 +68,7 @@ class Bip:
                         (-1, "Hayır")
                     ]
                     self.api.one.send_poll_message(
-                        receiver,
+                        msisdn,
                         Poll.SHORT_LIST,
                         Message.SINGLE_TITLE % (start_with, user_list[0]["full_name"]),
                         Message.SINGLE_DESC % Globals.SEND_AMOUNT,
@@ -78,17 +78,17 @@ class Bip:
                         user_tuple,
                         "OK")
             else:
-                self.api.one.send_text_message(receiver, Message.NOT_FOUND % start_with)
+                self.api.one.send_text_message(msisdn, Message.NOT_FOUND % start_with)
 
-    def __send_reason_list(self, receiver, user_id, target_user_id):
+    def __send_reason_list(self, msisdn, user_id, target_user_id):
         scope_id = self.db.get_user_scope_id(user_id)
         reason_list = self.db.get_reasons_by_scope(scope_id)
         if len(reason_list) > 0:
             reason_tuple = get_key_value_tuple(reason_list, "id", "text")
             target_user = self.db.get_user_by_id(target_user_id)
             self.api.one.send_poll_message(
-                receiver,
-                Poll.REASON_LIST,
+                msisdn,
+                Poll.REASON_LIST + "-" + str(target_user_id),
                 Message.REASON_LIST_TITLE % (get_name_with_suffix(target_user["first_name"]), Globals.SEND_AMOUNT),
                 Message.REASON_LIST_DESC,
                 Image.REASON_LIST_URL,
@@ -96,6 +96,22 @@ class Bip:
                 PollType.SINGLE_CHOOSE,
                 reason_tuple,
                 "OK")
+
+    def __send_a_reason(self, msisdn, user_id, target_user_id, reason_id):
+        balance = self.db.get_balance(user_id)
+        if balance >= Globals.SEND_AMOUNT:
+            if not self.db.check_user_limit(user_id, target_user_id):
+                # TODO user limit
+                pass
+            elif not self.db.check_team_limit(user_id, target_user_id):
+                # TODO team limit
+                pass
+            else:
+                self.db.transfer_points(user_id, target_user_id, reason_id)
+                # TODO send messages to sender and receiver
+        else:
+            pass
+            # TODO bakiye yetersiz
 
     def process_request(self, msg):
         if msg.sender:
@@ -120,13 +136,13 @@ class Bip:
                     # send menu to user
                     self.__send_menu__(msg.sender)
 
-                elif msg.ctype == "poll" and msg.poll.id == Poll.SHORT_LIST:
+                elif msg.ctype == "poll" and msg.poll_id == Poll.SHORT_LIST:
                     # send reason list to user
-                    self.__send_reason_list(msg.sender, user_id, msg.poll.value[0])
+                    self.__send_reason_list(msg.sender, user_id, msg.poll_value)
                     pass
 
-                elif msg.ctype == "poll" and msg.poll.id == Poll.REASON_LIST:
-                    # TODO hizlicevap
+                elif msg.ctype == "poll" and msg.poll_id == Poll.REASON_LIST:
+                    self.__send_a_reason(msg.sender, user_id, msg.poll_ext, msg.poll_value)
                     pass
 
                 else:
