@@ -102,15 +102,21 @@ class Bip:
         if balance >= Globals.SEND_AMOUNT:
             if not self.db.check_user_limit(user_id, target_user_id):
                 # TODO user limit
-                pass
+                self.api.one.send_text_message(msisdn, "")
+
             elif not self.db.check_team_limit(user_id, target_user_id):
                 # TODO team limit
-                pass
+                self.api.one.send_text_message(msisdn, "")
             else:
                 self.db.transfer_points(user_id, target_user_id, reason_id)
-                # TODO send messages to sender and receiver
+                self.api.one.send_text_message(msisdn, "")
+
+                # TODO
+                target_user = self.db.get_user_by_id(target_user_id)
+                self.api.one.send_text_message(target_user["msisdn"], "")
+
         else:
-            pass
+            self.api.one.send_text_message(msisdn, "")
             # TODO bakiye yetersiz
 
     def process_request(self, msg):
@@ -139,11 +145,9 @@ class Bip:
                 elif msg.ctype == "poll" and msg.poll_id == Poll.SHORT_LIST:
                     # send reason list to user
                     self.__send_reason_list(msg.sender, user_id, msg.poll_value)
-                    pass
 
                 elif msg.ctype == "poll" and msg.poll_id == Poll.REASON_LIST:
                     self.__send_a_reason(msg.sender, user_id, msg.poll_ext, msg.poll_value)
-                    pass
 
                 else:
                     # send name list to user

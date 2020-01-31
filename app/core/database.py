@@ -61,8 +61,10 @@ class Database:
                 cursor.close()
                 conn.close()
 
-    def __execute_with_connection(self, conn: object, sql: str, params: tuple, insert: bool) -> object:
+    def __execute(self, sql: str, params: tuple, insert: bool) -> object:
         try:
+            conn = self.connection_pool.get_connection()
+
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
                 result = cursor.execute(sql, params)
@@ -79,15 +81,6 @@ class Database:
         finally:
             if conn is not None and conn.is_connected():
                 cursor.close()
-
-    def __execute(self, sql: str, params: tuple, insert: bool):
-        try:
-            conn = self.connection_pool.get_connection()
-            return self.__execute_with_connection(conn, sql, params, insert)
-        except Error as e:
-            raise e
-        finally:
-            if conn is not None and conn.is_connected():
                 conn.close()
 
     def add_scope(self, scope_name):
@@ -216,28 +209,27 @@ class Database:
     def transfer_points(self, sender_id, receiver_id, reason_id):
         try:
             conn = self.connection_pool.get_connection()
-            self.__execute_with_connection(conn,
-                                           "insert into transaction (sender_id, receiver_id, amount, transaction_date, reason_id, is_active) values (%s,%s,%s,CURDATE(),%s,1);"
-                                           , (sender_id, receiver_id, Globals.SEND_AMOUNT, reason_id),
-                                           True)
 
-            self.__execute_with_connection(conn,
-                                           "update wallet set balance = balance - %s where user_id = %s",
-                                           (Globals.SEND_AMOUNT - Globals.EARN_AMOUNT, sender_id),
-                                           True)
+            if conn.is_connected():
+                cursor = conn.cursor(prepared=True)
+                cursor.execute(
+                    "insert into transaction (sender_id, receiver_id, amount, transaction_date, reason_id, is_active) values (%s,%s,%s,CURRENT_TIMESTAMP(),%s,1);"
+                    , (sender_id, receiver_id, Globals.SEND_AMOUNT, reason_id))
 
-            self.__execute_with_connection(conn,
-                                           "update wallet set balance = balance + %s where user_id = %s",
-                                           (Globals.SEND_AMOUNT, receiver_id),
-                                           True)
-            conn.commit()
+                cursor.execute("update wallet set balance = balance - %s where user_id = %s",
+                               (Globals.SEND_AMOUNT - Globals.EARN_AMOUNT, sender_id))
 
-        except Error as e:
-            if conn is not None and conn.is_connected():
-                conn.rollback()
-                raise e
+                cursor.execute("update wallet set balance = balance + %s where user_id = %s",
+                               (Globals.SEND_AMOUNT, receiver_id))
+
+                conn.commit()
+
+        except mysql.connector.Error as e:
+            conn.rollback()
+            raise e
         finally:
             if conn is not None and conn.is_connected():
+                cursor.close()
                 conn.close()
 
     def check_user_limit(self, sender_id, receiver_id) -> bool:
@@ -251,8 +243,22 @@ class Database:
 
     def check_team_limit(self, sender_id, receiver_id):
         count = self.__fetchone(
-            "select count(*) from transaction t, user u where t.sender_id = u.id and t.transaction_date = curdate() and t.is_active = 1 and u.team_id = (select team_id from user where id = receiver_id)")
+            "select count(*) from transaction t, user u "
+            "where t.sender_id = u.id "
+            "and t.transaction_date = curdate() "
+            "and t.is_active = 1 "
+            "and t.sender_id = %s "
+            "and u.team_id = (select team_id from user where id = %s)", (sender_id, receiver_id,))
         if count is not None and count[0] > Globals.SEND_SAME_TEAM_LIMIT:
             return False
 
         return True
+
+    def get_message(self, scope_id, message_name):
+        result = self.__fetchone("select text from message where scope_id= %s and name = %s "
+                                 "union all "
+                                 "select text from message where scope_id = 0 and name = %s and not exist("
+                                 "select * from message where scope_id = %s and name = %s)",
+                                 (scope_id, message_name, message_name, scope_id, message_name))
+
+        return result[0] if result else ""
