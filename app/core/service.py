@@ -157,7 +157,7 @@ class Service:
                     self.__send_reason_list(msg.sender, user_id, msg.poll_value)
 
                 elif msg.ctype == CType.POLL and msg.poll_id == Poll.REASON_LIST:
-                    if msg.poll_secret == hash_password(user_id + self.transfer_secret + msg.poll_ext):
+                    if verify_password(msg.poll_secret, user_id + self.transfer_secret + msg.poll_ext):
                         self.__send_a_reason(msg.sender, user_id, msg.poll_ext, msg.poll_value)
                     else:
                         raise Exception("Transfer secret does not match!")
