@@ -32,8 +32,8 @@ def create_app(config):
                 content = request.get_json()
                 scope_name = content["name"]
                 if scope_name:
-                    id = db.add_scope(scope_name)
-                    return "Scope Created with id: %s" % id, 201
+                    scope_id = db.add_scope(scope_name)
+                    return "Scope Created with id: %s" % scope_id, 201
                 else:
                     return "Scope name is empty!", 500
         except Exception as e:
@@ -48,22 +48,22 @@ def create_app(config):
                 scope_id = content["scope_id"]
                 team_name = content["name"]
                 if team_name:
-                    id = db.add_team(team_name, scope_id)
-                    return "Team Created with id: %s" % id, 201
+                    team_id = db.add_team(team_name, scope_id)
+                    return "Team Created with id: %s" % team_id, 201
                 else:
                     return "Team name is empty!", 500
         except Exception as e:
             print("Team create exception: %s" % str(e))
             return "An error occurred", 500
 
-    @app.route("/team/<id>", methods=["PUT"])
-    def update_team(id):
+    @app.route("/team/<team_id>", methods=["PUT"])
+    def update_team(team_id):
         try:
             if request.is_json:
                 content = request.get_json()
                 team_name = content["name"]
                 if team_name:
-                    id = db.update_team(id, team_name)
+                    db.update_team(team_id, team_name)
                     return "Team Updated", 200
                 else:
                     return "Team name is empty!", 500
@@ -71,10 +71,10 @@ def create_app(config):
             print("Team update exception: %s" % str(e))
             return "An error occurred", 500
 
-    @app.route("/team/<id>", methods=["DELETE"])
-    def delete_team(id):
+    @app.route("/team/<team_id>", methods=["DELETE"])
+    def delete_team(team_id):
         try:
-            db.delete_team(id)
+            db.delete_team(team_id)
             return "Team Deleted.", 200
         except Exception as e:
             print("Team delete exception: %s" % str(e))
@@ -83,7 +83,7 @@ def create_app(config):
     @app.route("/team", methods=["GET"])
     def get_teams():
         try:
-            return db.get_teams()
+            return jsonify({"result": db.get_teams()})
         except Exception as e:
             print("Team retrieve exception: %s" % str(e))
             return "An error occurred", 500
@@ -132,7 +132,7 @@ def create_app(config):
     @app.route("/user", methods=["GET"])
     def get_users():
         try:
-            return db.get_users()
+            return jsonify({"result": db.get_users()})
         except Exception as e:
             print("Team create exception: %s" % str(e))
             return "An error occurred", 500
