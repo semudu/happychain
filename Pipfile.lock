@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4bcd11926e7890a6eb6e070c72eb63b667d757cd31e21a4dcb8553763668a365"
+            "sha256": "b763ddec107eb1376f9e31eeca7139f6c57d9bd3116058c16bd794ee5ed107d1"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -27,7 +27,7 @@
         "bipwrapper": {
             "editable": true,
             "git": "https://github.com/semudu/bip-api",
-            "ref": "1a34be36c4d11ea6eb41dc534f2c588fc9083c20"
+            "ref": "535edfffef8a22016123b99e779b68597aed5314"
         },
         "certifi": {
             "hashes": [
@@ -65,6 +65,12 @@
             "index": "pypi",
             "version": "==0.15"
         },
+        "et-xmlfile": {
+            "hashes": [
+                "sha256:614d9722d572f6246302c4491846d2c393c199cfa4edc9af593437691683335b"
+            ],
+            "version": "==1.0.1"
+        },
         "flask": {
             "hashes": [
                 "sha256:13f9f196f330c7c2c5d7a5cf91af894110ca0215ac051b5844701f2bfd934d52",
@@ -72,6 +78,14 @@
             ],
             "index": "pypi",
             "version": "==1.1.1"
+        },
+        "flask-excel": {
+            "hashes": [
+                "sha256:260b88c9101de78b00abbdae161e84f6466d24e1c5081583764877e8a26085cc",
+                "sha256:b82ddfe6319ecf2f796ada9966737ac8eaf9a99d6bce773f8acdc08acd7e9fae"
+            ],
+            "index": "pypi",
+            "version": "==0.0.7"
         },
         "idna": {
             "hashes": [
@@ -87,12 +101,26 @@
             ],
             "version": "==1.1.0"
         },
+        "jdcal": {
+            "hashes": [
+                "sha256:1abf1305fce18b4e8aa248cf8fe0c56ce2032392bc64bbd61b5dff2a19ec8bba",
+                "sha256:472872e096eb8df219c23f2689fc336668bdb43d194094b5cc1707e1640acfc8"
+            ],
+            "version": "==1.4.1"
+        },
         "jinja2": {
             "hashes": [
-                "sha256:6e7a3c2934694d59ad334c93dd1b6c96699cf24c53fdb8ec848ac6b23e685734",
-                "sha256:d6609ae5ec3d56212ca7d802eda654eaf2310000816ce815361041465b108be4"
+                "sha256:93187ffbc7808079673ef52771baa950426fd664d3aad1d0fa3e95644360e250",
+                "sha256:b0eaf100007721b5c16c1fc1eecb87409464edc10469ddc9a22a27a99123be49"
             ],
-            "version": "==2.11.0"
+            "version": "==2.11.1"
+        },
+        "lml": {
+            "hashes": [
+                "sha256:b1bef669dc077a1075fa64b99229b6341085b3b3a98d29c66df1853cc14e6c1a",
+                "sha256:ea5ba817b4adc9e9f5c21725cd2475f912933b7e2dfdf0792aed80077154f63f"
+            ],
+            "version": "==0.0.9"
         },
         "markupsafe": {
             "hashes": [
@@ -161,6 +189,12 @@
             "index": "pypi",
             "version": "==8.0.19"
         },
+        "openpyxl": {
+            "hashes": [
+                "sha256:547a9fc6aafcf44abe358b89ed4438d077e9d92e4f182c87e2dc294186dc4b64"
+            ],
+            "version": "==3.0.3"
+        },
         "protobuf": {
             "hashes": [
                 "sha256:10394a4d03af7060fa8a6e1cbf38cea44be1467053b0aea5bbfcb4b13c4b88c4",
@@ -189,6 +223,35 @@
             "index": "pypi",
             "version": "==3.0.0"
         },
+        "pyexcel": {
+            "hashes": [
+                "sha256:7fac067e65567c380933b4d382587a5ce6581d0ad85992f6f0bc7c3f16012184",
+                "sha256:f0a7797f3a0de9e6f81151c9581fa90c4e1afce207dc47d2f0ba728dd2e24467"
+            ],
+            "version": "==0.5.15"
+        },
+        "pyexcel-io": {
+            "hashes": [
+                "sha256:08dfe39553b996359b143de3d9ec43e196f1138d47cabb73af04a16821b84d79",
+                "sha256:2cba956814e72b66072d97b00ede4a084ad881ce72129088eb0dc3c7f3d670cd"
+            ],
+            "version": "==0.5.20"
+        },
+        "pyexcel-webio": {
+            "hashes": [
+                "sha256:039538f1b35351f1632891dde29ef4d7fba744e217678ebb5a501336e28ca265",
+                "sha256:3583cf7dcddb747520a8a90e93cf07b0584878b56b3c41c46d132b458a6cfd00"
+            ],
+            "version": "==0.1.4"
+        },
+        "pyexcel-xlsx": {
+            "hashes": [
+                "sha256:9bae2820c5767440d8a387695e0f8e8f73c97bcde0a5680c200ae82a2f6d5cc6",
+                "sha256:ab3913b465d0d645a51e3c896dc006738a398d36ceaad2dad133056132facb92"
+            ],
+            "index": "pypi",
+            "version": "==0.5.8"
+        },
         "requests": {
             "hashes": [
                 "sha256:11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4",
@@ -211,6 +274,13 @@
                 "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"
             ],
             "version": "==1.14.0"
+        },
+        "texttable": {
+            "hashes": [
+                "sha256:7dc282a5b22564fe0fdc1c771382d5dd9a54742047c61558e071c8cd595add86",
+                "sha256:eff3703781fbc7750125f50e10f001195174f13825a92a45e9403037d539b4f4"
+            ],
+            "version": "==1.6.2"
         },
         "unidecode": {
             "hashes": [

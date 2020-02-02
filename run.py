@@ -4,7 +4,8 @@ import app
 from app.job import Job
 from config import Config
 
-if __name__ == '__main__':
+
+def start_app():
     config = Config()
     jobs = Job(config)
 

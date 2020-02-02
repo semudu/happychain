@@ -154,13 +154,14 @@ class Database:
             "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where first_name like %s",
             (start_with + "%",))
 
-    def get_users_by_scope(self, scope_id, start_with=""):
+    def get_users_by_scope(self, user_id, start_with=""):
         return self.__fetchall(
             "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u, team t, scope s where "
             "s.id = t.scope_id "
             "and t.id = u.team_id "
-            "and s.id = %s "
-            "and first_name like %s", (scope_id, start_with + "%"))
+            "and u.id != %s "
+            "and s.id = (select scope_id from user where id = %s) "
+            "and first_name like %s", (user_id, user_id, start_with + "%"))
 
     def get_user_id_by_msisdn(self, msisdn):
         user = self.__fetchall("select * from user where msisdn = %s", (msisdn,))
@@ -201,6 +202,10 @@ class Database:
               "and (special_date is null or special_date = CURRENT_DATE()) " \
               "order by special_date desc, id asc;"
         return self.__fetchall(sql, (scope_id,))
+
+    def get_reason_by_id(self, reason_id):
+        result = self.__fetchone("select text from reason where id = %s;", (reason_id,))
+        return result[0] if result else None
 
     def get_balance(self, user_id):
         result = self.__fetchone("select balance from wallet where user_id = %s;", (user_id,))

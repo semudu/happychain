@@ -44,3 +44,7 @@ class Message:
     NOT_FOUND = "%s ile başlayan kimseyi bulamadım 🙄"
     REASON_LIST_TITLE = "%s mesajınla birlikte %s IMS yolluyorsun 😇"
     REASON_LIST_DESC = "Ona hangi mesajı iletmemi istersin?"
+    SAME_PERSON_LIMIT = "Malesef aynı kişiye günde %s kere gönderim yapabilirsin 🙄"
+    SAME_TEAM_LIMIT = "Malesef kendi takımına günde %s kere gönderim yapabilirsin 🙄"
+    INSUFFICIENT_FUNDS = "Bravo, tüm bakiyeni harcamışsın 👏 eminim güzel bir geri dönüşü olacaktır 😊"
+    SENT_MESSAGE = "%s\n\n%s\n\nmesajını da ileterek %s IMS yolladın ve bu gönderimden sen de %s IMS kazanmış oldun 👏\n\nKalan bakiyen: %s IMS"

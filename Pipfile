@@ -7,14 +7,17 @@ verify_ssl = true
 
 [packages]
 flask = "*"
+Flask-Excel = "*"
+pyexcel-xlsx = "*"
 mysql-connector-python = "*"
+#psycopg2 = "*"
 base58 = "*"
 ecdsa = "*"
 unidecode = "*"
 requests = "*"
 schedule = "*"
 pycron = "*"
-bipwrapper = {editable = true,git = "https://github.com/semudu/bip-api"}
+bipwrapper = {editable = true, git = "https://github.com/semudu/bip-api"}
 
 [requires]
 python_version = "3.7"

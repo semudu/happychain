@@ -1,19 +1,23 @@
 import logging
+from collections import OrderedDict
+from typing import OrderedDict
 
-from flask import Flask, request
+import flask_excel as excel
+from flask import Flask, request, jsonify
 
-from .core.bip import Bip
 from .core.database import Database
 from .core.model.content import Content
+from .core.service import Service
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 
 def create_app(config):
     db = Database(config)
-    bip = Bip(config)
+    bip = Service(config)
 
     app = Flask(__name__)
+    excel.init_excel(app)
     app.config.from_object(config)
 
     @app.route("/")
@@ -83,6 +87,17 @@ def create_app(config):
         except Exception as e:
             print("Team retrieve exception: %s" % str(e))
             return "An error occurred", 500
+
+    @app.route("/user/upload", methods=["GET", "POST"])
+    def upload_user_list():
+        if request.method == "POST":
+            return jsonify({"result": request.get_array(field_name="file")})
+        else:
+            data = OrderedDict
+            data.update({"Sheet 1": [
+                ["MSISDN", "İsim", "Soyisim", "Cinsiyet (E/K)", "Doğum Tarihi (Gün/Ay/Yıl)", "Takım"],
+                ["533210xxxx", "-", "-", "E", "01/01/1999", "ICT-AIAS-DAS-DMD"]]})
+            return excel.make_response_from_book_dict(data, file_type="xlsx", file_name="user_list")
 
     @app.route("/user", methods=["POST"])
     def create_user():
