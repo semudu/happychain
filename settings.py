@@ -7,7 +7,8 @@ class Settings:
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     APP_NAME = 'HappyChain'
     HOST = '0.0.0.0'
-    PORT = '5000'
+    # PORT = '5000'
+    PORT = os.environ.get('PORT', 5000)
     DB_HOST = os.environ.get('DB_HOST')
     DB_PORT = os.environ.get('DB_PORT')
     DB_NAME = os.environ.get('DB_NAME')
