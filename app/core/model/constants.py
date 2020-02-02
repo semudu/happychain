@@ -12,6 +12,7 @@ class Globals:
     SEND_AMOUNT = 10
     EARN_AMOUNT = 1
     DEFAULT_PASSWD = "123456"
+    DELIMITER = ":::"
 
 
 class Command:

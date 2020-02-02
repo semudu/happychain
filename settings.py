@@ -17,3 +17,4 @@ class Settings:
     BIP_URL = os.environ.get('BIP_URL')
     BIP_USERNAME = os.environ.get('BIP_USERNAME')
     BIP_PASSWORD = os.environ.get('BIP_PASSWORD')
+    TRANSFER_SECRET = os.environ.get('TRANSFER_SECRET')

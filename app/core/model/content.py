@@ -1,5 +1,6 @@
 import json
 
+from .constants import Globals
 from ..utils import *
 
 
@@ -118,7 +119,7 @@ class Content:
     @content.setter
     def content(self, value):
         self.__content = value
-        self.__commands = split_to_array(value, '-') if value else [""]
+        self.__commands = split_to_array(value, Globals.DELIMITER) if value else [""]
 
     @property
     def txnid(self):
@@ -162,8 +163,9 @@ class Content:
     @poll.setter
     def poll(self, value):
         if value:
-            self.__poll = KeyValuePair(split_to_array(value.get("pollid"), '-') if value.get("pollid") else [""],
-                                       value.get("optionids"))
+            self.__poll = KeyValuePair(
+                split_to_array(value.get("pollid"), Globals.DELIMITER) if value.get("pollid") else [""],
+                value.get("optionids"))
         else:
             self.__poll = KeyValuePair([None], [None])
 
@@ -190,6 +192,10 @@ class Content:
     @property
     def poll_ext(self):
         return self.__poll.id[1]
+
+    @property
+    def poll_secret(self):
+        return self.__poll.id[2]
 
     @property
     def next_command(self, index=1):

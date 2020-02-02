@@ -16,13 +16,14 @@ class Service:
     def __init__(self, config):
         self.db = Database(config)
         # self.blockchain = Blockchain(config)
+        self.transfer_secret = config.TRANSFER_SECRET
         self.api = Api(config.BIP_URL, config.BIP_USERNAME, config.BIP_PASSWORD)
 
     def __send_menu__(self, msisdn):
         self.api.single.send_quickreply_message(msisdn, Poll.MENU, [
             (Command.POINT, "💰 IMS Bakiyem", ButtonType.POST_BACK),
-            (Command.LAST_SENT + "-5", "➡️ Son Yolladıklarım", ButtonType.POST_BACK),
-            (Command.LAST_RECEIVED + "-5", "⬅️ Son gelenler", ButtonType.POST_BACK),
+            (Command.LAST_SENT + Globals.DELIMITER + "5", "➡️ Son Yolladıklarım", ButtonType.POST_BACK),
+            (Command.LAST_RECEIVED + Globals.DELIMITER + "5", "⬅️ Son gelenler", ButtonType.POST_BACK),
             (Command.HELP, "❓ Yardım", ButtonType.POST_BACK)
         ])
 
@@ -89,7 +90,8 @@ class Service:
             target_user = self.db.get_user_by_id(target_user_id)
             self.api.single.send_poll_message(
                 msisdn,
-                Poll.REASON_LIST + "-" + str(target_user_id),
+                Poll.REASON_LIST + Globals.DELIMITER + str(target_user_id) + Globals.DELIMITER + hash_password(
+                    str(user_id) + self.transfer_secret + str(target_user_id)),
                 Message.REASON_LIST_TITLE % (get_name_with_suffix(target_user["first_name"]), Globals.SEND_AMOUNT),
                 Message.REASON_LIST_DESC,
                 Image.REASON_LIST_URL,
@@ -155,7 +157,10 @@ class Service:
                     self.__send_reason_list(msg.sender, user_id, msg.poll_value)
 
                 elif msg.ctype == CType.POLL and msg.poll_id == Poll.REASON_LIST:
-                    self.__send_a_reason(msg.sender, user_id, msg.poll_ext, msg.poll_value)
+                    if msg.poll_secret == hash_password(user_id + self.transfer_secret + msg.poll_ext):
+                        self.__send_a_reason(msg.sender, user_id, msg.poll_ext, msg.poll_value)
+                    else:
+                        raise Exception("Transfer secret does not match!")
 
                 else:
                     # send name list to user
