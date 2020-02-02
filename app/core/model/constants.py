@@ -11,6 +11,7 @@ class Globals:
     SEND_WAIT_LIMIT = 10  # SECOND
     SEND_AMOUNT = 10
     EARN_AMOUNT = 1
+    DEFAULT_PASSWD = "123456"
 
 
 class Command:

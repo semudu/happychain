@@ -14,7 +14,7 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 def create_app(config):
     db = Database(config)
-    bip = Service(config)
+    service = Service(config)
 
     app = Flask(__name__)
     excel.init_excel(app)
@@ -90,14 +90,25 @@ def create_app(config):
 
     @app.route("/user/upload", methods=["GET", "POST"])
     def upload_user_list():
-        if request.method == "POST":
-            return jsonify({"result": request.get_array(field_name="file")})
-        else:
-            data = OrderedDict
-            data.update({"Sheet 1": [
-                ["MSISDN", "İsim", "Soyisim", "Cinsiyet (E/K)", "Doğum Tarihi (Gün/Ay/Yıl)", "Takım"],
-                ["533210xxxx", "-", "-", "E", "01/01/1999", "ICT-AIAS-DAS-DMD"]]})
-            return excel.make_response_from_book_dict(data, file_type="xlsx", file_name="user_list")
+        try:
+            if request.method == "POST":
+                user_array = request.get_array(field_name="file")
+                if user_array is not None:
+                    result = jsonify({"result": service.import_user_array(user_array)})
+                else:
+                    return "file not found."
+
+                return result
+            else:
+                data = OrderedDict
+                data.update({"Sheet 1": [
+                    ["MSISDN", "İsim", "Soyisim", "Cinsiyet (E/K)", "Doğum Tarihi (Gün/Ay/Yıl)", "Takım"],
+                    ["533210xxxx", "-", "-", "E", "01/01/1999", "ICT-AIAS-DAS-DMD"]]})
+
+                return excel.make_response_from_book_dict(data, file_type="xlsx", file_name="user_list")
+        except Exception as e:
+            print("User import exception: %s" % str(e))
+            return "An error occurred", 500
 
     @app.route("/user", methods=["POST"])
     def create_user():
@@ -141,7 +152,7 @@ def create_app(config):
     def bip_process():
         if request.is_json:
             logging.debug(request.get_json())
-            bip.process_request(Content(request.get_json()))
+            service.process_bip_request(Content(request.get_json()))
             return 'JSON posted'
         else:
             return "Content Type must be JSON!"

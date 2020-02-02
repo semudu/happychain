@@ -2,6 +2,7 @@ import logging
 
 from bipwrapper.api import Api
 from bipwrapper.type import *
+from mysql.connector import Error
 
 # from .blockchain import Blockchain
 from .database import Database
@@ -126,7 +127,7 @@ class Service:
         else:
             self.api.single.send_text_message(msisdn, Message.INSUFFICIENT_FUNDS)
 
-    def process_request(self, msg):
+    def process_bip_request(self, msg):
         if msg.sender:
             user_id = self.db.get_user_id_by_msisdn(msg.sender)
             if user_id:
@@ -159,3 +160,31 @@ class Service:
                 else:
                     # send name list to user
                     self.__send_user_list(msg.sender, user_id, msg.command)
+
+    def import_user_array(self, user_array):
+        teams = {}
+        succeed = []
+        failed = []
+
+        for i in range(1, len(user_array)):
+            user_fields = user_array[i]
+            team_name = user_fields[5]
+            if team_name not in teams:
+                team_id = self.db.get_team_id_by_name(team_name)
+                if team_id is not None:
+                    teams[team_name] = team_id
+
+            if team_name in teams:
+                try:
+                    self.db.add_user(user_fields[0], user_fields[1], user_fields[2], user_fields[3], user_fields[4],
+                                     Globals.DEFAULT_PASSWD, teams[team_name])
+                    succeed.append(user_fields[0])
+                except Error as e:
+                    failed.append({"msisdn": user_fields[0], "description": str(e)})
+            else:
+                failed.append({"msisdn": user_fields[0], "description": "team[%s] is not found" % team_name})
+
+        return {
+            "succeed": succeed,
+            "failed": failed
+        }

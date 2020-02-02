@@ -28,7 +28,7 @@ class Database:
                 cursor = conn.cursor(prepared=True)
                 cursor.execute(sql, params)
                 result = cursor.fetchone()
-                return result if result[0] else None
+                return result[0] if result else None
             else:
                 raise Exception("Connection is not connected!")
         except Error as e:
@@ -111,6 +111,10 @@ class Database:
         sql = "select * from team;"
         return self.__fetchall(sql)
 
+    def get_team_id_by_name(self, team_name):
+        result = self.__fetchone("select id from team where name = %s", (team_name,))
+        return result if result else None
+
     def get_scopes(self):
         sql = "select * from scope;"
         return self.__fetchall(sql)
@@ -124,15 +128,35 @@ class Database:
         return len(result) > 0 if result[0]["id"] else -1
 
     def add_user(self, msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id):
-        sql = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id) values (%s,upper(%s),upper(%s),%s,%s,%s,%s);"
-        user_id = self.__execute(sql, (
-            msisdn, first_name, last_name, gender, convert_to_date(date_of_birth, "%d.%m.%Y"), hash_password(passwd),
-            team_id), True)
-        # keys = get_keys()
-        # sql = "insert into wallet (wallet_key,public_key,private_key,user_id) values (%s,%s,%s,%s);"
-        # wallet_id = self.__execute(sql, (keys['wallet_key'], keys['public_key'], keys['private_key'], user_id), True)
-        sql = "insert into wallet (user_id, balance) values (%s%s);"
-        wallet_id = self.__execute(sql, (user_id, Globals.LOAD_BALANCE_AMOUNT))
+        try:
+            conn = self.connection_pool.get_connection()
+
+            if conn.is_connected():
+                cursor = conn.cursor(prepared=True)
+                sql = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id) values (%s,upper(%s),upper(%s),%s,%s,%s,%s);"
+                cursor.execute(sql, (
+                    msisdn, first_name, last_name, gender, convert_to_date(date_of_birth, "%d/%m/%Y"),
+                    hash_password(passwd),
+                    team_id))
+
+                user_id = cursor.lastrowid
+
+                sql = "insert into wallet (user_id, balance) values (%s,%s);"
+                cursor.execute(sql,
+                               (user_id, Globals.LOAD_BALANCE_AMOUNT))
+
+                wallet_id = cursor.lastrowid
+
+                conn.commit()
+
+        except mysql.connector.Error as e:
+            conn.rollback()
+            raise e
+        finally:
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                conn.close()
+
         return {
             "user_id": user_id,
             "wallet_id": wallet_id
@@ -205,7 +229,7 @@ class Database:
 
     def get_reason_by_id(self, reason_id):
         result = self.__fetchone("select text from reason where id = %s;", (reason_id,))
-        return result[0] if result else None
+        return result if result else None
 
     def get_balance(self, user_id):
         result = self.__fetchone("select balance from wallet where user_id = %s;", (user_id,))
@@ -266,4 +290,4 @@ class Database:
                                  "select * from message where scope_id = %s and name = %s)",
                                  (scope_id, message_name, message_name, scope_id, message_name))
 
-        return result[0] if result else ""
+        return result if result else ""
