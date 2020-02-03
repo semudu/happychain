@@ -15,6 +15,8 @@ def create_app(config):
     service = Service(config)
 
     app = Flask(__name__)
+    app.config['BASIC_AUTH_USERNAME'] = config.BASIC_AUTH_USERNAME
+    app.config['BASIC_AUTH_PASSWORD'] = config.BASIC_AUTH_PASSWORD
 
     basic_auth = BasicAuth(app)
 
