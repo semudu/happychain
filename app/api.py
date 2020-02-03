@@ -1,15 +1,13 @@
-import logging
 from collections import OrderedDict
 from typing import OrderedDict
 
 import flask_excel as excel
 from flask import Flask, request, jsonify
+from flask_basicauth import BasicAuth
 
 from .core.database import Database
 from .core.model.content import Content
 from .core.service import Service
-
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 
 def create_app(config):
@@ -17,14 +15,17 @@ def create_app(config):
     service = Service(config)
 
     app = Flask(__name__)
+
+    basic_auth = BasicAuth(app)
+
     excel.init_excel(app)
     app.config.from_object(config)
 
     @app.route("/")
     def get():
-        logging.debug("first call!")
         return "Pitika!!!"
 
+    @basic_auth.required
     @app.route("/scope", methods=["POST"])
     def create_scope():
         try:
@@ -40,6 +41,7 @@ def create_app(config):
             print("Scope create exception: %s" % str(e))
             return "An error occurred", 500
 
+    @basic_auth.required
     @app.route("/team", methods=["POST"])
     def create_team():
         try:
@@ -56,14 +58,16 @@ def create_app(config):
             print("Team create exception: %s" % str(e))
             return "An error occurred", 500
 
+    @basic_auth.required
     @app.route("/team/<team_id>", methods=["PUT"])
     def update_team(team_id):
         try:
             if request.is_json:
                 content = request.get_json()
                 team_name = content["name"]
+                scope_id = content["scope_id"]
                 if team_name:
-                    db.update_team(team_id, team_name)
+                    db.update_team(team_id, team_name, scope_id)
                     return "Team Updated", 200
                 else:
                     return "Team name is empty!", 500
@@ -71,6 +75,7 @@ def create_app(config):
             print("Team update exception: %s" % str(e))
             return "An error occurred", 500
 
+    @basic_auth.required
     @app.route("/team/<team_id>", methods=["DELETE"])
     def delete_team(team_id):
         try:
@@ -80,6 +85,7 @@ def create_app(config):
             print("Team delete exception: %s" % str(e))
             return "An error occurred", 500
 
+    @basic_auth.required
     @app.route("/team", methods=["GET"])
     def get_teams():
         try:
@@ -88,6 +94,7 @@ def create_app(config):
             print("Team retrieve exception: %s" % str(e))
             return "An error occurred", 500
 
+    @basic_auth.required
     @app.route("/user/upload", methods=["GET", "POST"])
     def upload_user_list():
         try:
@@ -110,6 +117,7 @@ def create_app(config):
             print("User import exception: %s" % str(e))
             return "An error occurred", 500
 
+    @basic_auth.required
     @app.route("/user", methods=["POST"])
     def create_user():
         try:
@@ -131,15 +139,17 @@ def create_app(config):
             print("User create exception: %s" % str(e))
             return "An error occurred", 500
 
-    @app.route("/user/<id>", methods=["DELETE"])
-    def delete_user(id):
+    @basic_auth.required
+    @app.route("/user/<user_id>", methods=["DELETE"])
+    def delete_user(user_id):
         try:
-            db.delete_user(id)
+            db.delete_user(user_id)
             return "User Deleted.", 200
         except Exception as e:
             print("User delete exception: %s" % str(e))
             return "An error occurred", 500
 
+    @basic_auth.required
     @app.route("/user", methods=["GET"])
     def get_users():
         try:
@@ -151,7 +161,6 @@ def create_app(config):
     @app.route("/bip", methods=["POST"])
     def bip_process():
         if request.is_json:
-            logging.debug(request.get_json())
             service.process_bip_request(Content(request.get_json()))
             return 'JSON posted'
         else:

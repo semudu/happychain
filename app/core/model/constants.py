@@ -15,6 +15,12 @@ class Globals:
     DELIMITER = ":::"
 
 
+class Role:
+    USER = "USER"
+    SCOPE_ADMIN = "SCOPE_ADMIN"
+    SUPER_ADMIN = "SUPER_ADMIN"
+
+
 class Command:
     HELP = "__help"
     MENU = "__menu"

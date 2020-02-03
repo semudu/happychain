@@ -2,7 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
 
-from .model.constants import Globals
+from .model.constants import Globals, Role
 from .utils import hash_password, convert_to_date
 
 
@@ -133,11 +133,12 @@ class Database:
 
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
-                sql = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id) values (%s,upper(%s),upper(%s),%s,%s,%s,%s);"
+                sql = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id, role) values (%s,upper(%s),upper(%s),%s,%s,%s,%s,%s);"
                 cursor.execute(sql, (
                     msisdn, first_name, last_name, gender, convert_to_date(date_of_birth, "%d/%m/%Y"),
                     hash_password(passwd),
-                    team_id))
+                    team_id,
+                    Role.USER))
 
                 user_id = cursor.lastrowid
 
