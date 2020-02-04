@@ -17,6 +17,7 @@ def create_app(config):
     app = Flask(__name__)
     app.config['BASIC_AUTH_USERNAME'] = config.BASIC_AUTH_USERNAME
     app.config['BASIC_AUTH_PASSWORD'] = config.BASIC_AUTH_PASSWORD
+    app.config['BASIC_AUTH_FORCE'] = True
 
     basic_auth = BasicAuth(app)
 
