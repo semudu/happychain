@@ -158,6 +158,9 @@ def create_app(config):
 
     @app.route("/bip", methods=["POST"])
     def bip_process():
+        print("-----------------------")
+        print(request.get_json())
+        print("-----------------------")
         if request.is_json:
             service.process_bip_request(Content(request.get_json()))
             return 'JSON posted'

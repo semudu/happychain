@@ -176,13 +176,13 @@ class Service:
                 elif msg.command == Command.MENU:
                     self.__send_menu__(msg.sender)
 
-                elif msg.command == Command.POINT:
+                elif msg.command == Command.POINT or msg.payload == Command.POINT:
                     self.__send_balance__(msg.sender, user_id)
 
-                elif msg.command == Command.LAST_SENT:
+                elif msg.command == Command.LAST_SENT or msg.payload == Command.LAST_SENT:
                     self.__send_lastn_sent(msg.sender, user_id, msg.next_command())
 
-                elif msg.command == Command.LAST_RECEIVED:
+                elif msg.command == Command.LAST_RECEIVED or msg.payload == Command.LAST_RECEIVED:
                     self.__send_lastn_received(msg.sender, user_id, msg.next_command())
 
                 elif msg.ctype == CType.BUZZ:
