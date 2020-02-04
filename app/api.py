@@ -16,8 +16,11 @@ def create_app(config):
 
     app = Flask(__name__)
     app.config.from_object(config)
-    basic_auth = BasicAuth(app)
     excel.init_excel(app)
+
+    app.config['BASIC_AUTH_USERNAME'] = config.BASIC_AUTH_USERNAME
+    app.config['BASIC_AUTH_PASSWORD'] = config.BASIC_AUTH_PASSWORD
+    basic_auth = BasicAuth(app)
 
     @app.route("/")
     def get():
