@@ -1,3 +1,5 @@
+from decimal import *
+
 import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
@@ -234,7 +236,7 @@ class Database:
 
     def get_balance(self, user_id):
         result = self.__fetchone("select balance from wallet where user_id = %s;", (user_id,))
-        return float(result[0]) if result else 0
+        return Decimal(result) if result else 0
 
     def transfer_points(self, sender_id, receiver_id, reason_id):
         try:
@@ -266,7 +268,7 @@ class Database:
         count = self.__fetchone(
             "select count(*) from transaction where sender_id = %s and receiver_id = %s and transaction_date = curdate() and is_active = 1;",
             (sender_id, receiver_id))
-        if count is not None and count[0] > Globals.SEND_SAME_PERSON_LIMIT:
+        if count is not None and count > Globals.SEND_SAME_PERSON_LIMIT:
             return False
 
         return True
@@ -279,7 +281,7 @@ class Database:
             "and t.is_active = 1 "
             "and t.sender_id = %s "
             "and u.team_id = (select team_id from user where id = %s)", (sender_id, receiver_id,))
-        if count is not None and count[0] > Globals.SEND_SAME_TEAM_LIMIT:
+        if count is not None and count > Globals.SEND_SAME_TEAM_LIMIT:
             return False
 
         return True

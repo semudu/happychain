@@ -49,38 +49,43 @@ class Service:
         self.api.single.send_text_message(msisdn, text)
 
     def __send_user_list(self, msisdn, user_id, start_with):
-        if len(start_with) > 0:
-            user_list = self.db.get_users_by_scope(user_id, start_with)
-            if len(user_list) > 0:
-                if len(user_list) > 1:
-                    user_tuple = get_key_value_tuple(user_list, "id", "full_name")
-                    self.api.single.send_poll_message(
-                        msisdn,
-                        Poll.SHORT_LIST,
-                        Message.SHORT_LIST_TITLE % start_with,
-                        Message.SHORT_LIST_DESC % Globals.SEND_AMOUNT,
-                        Image.SHORT_LIST_URL,
-                        1,
-                        PollType.SINGLE_CHOOSE,
-                        user_tuple,
-                        "OK")
+        balance = self.db.get_balance(user_id)
+        logging.debug("balance: %s" % balance)
+        if balance >= Globals.SEND_AMOUNT:
+            if len(start_with) > 0:
+                user_list = self.db.get_users_by_scope(user_id, start_with)
+                if len(user_list) > 0:
+                    if len(user_list) > 1:
+                        user_tuple = get_key_value_tuple(user_list, "id", "full_name")
+                        self.api.single.send_poll_message(
+                            msisdn,
+                            Poll.SHORT_LIST,
+                            Message.SHORT_LIST_TITLE % start_with,
+                            Message.SHORT_LIST_DESC % Globals.SEND_AMOUNT,
+                            Image.SHORT_LIST_URL,
+                            1,
+                            PollType.SINGLE_CHOOSE,
+                            user_tuple,
+                            "OK")
+                    else:
+                        yes_no_tuple = [
+                            (user_list[0]["id"], "Evet"),
+                            (-1, "Hayır")
+                        ]
+                        self.api.single.send_poll_message(
+                            msisdn,
+                            Poll.SHORT_LIST,
+                            Message.SINGLE_TITLE % (start_with, user_list[0]["full_name"]),
+                            Message.SINGLE_DESC % Globals.SEND_AMOUNT,
+                            Image.SHORT_LIST_URL,
+                            1,
+                            PollType.SINGLE_CHOOSE,
+                            yes_no_tuple,
+                            "OK")
                 else:
-                    user_tuple = [
-                        (user_list[0]["id"], "Evet"),
-                        (-1, "Hayır")
-                    ]
-                    self.api.single.send_poll_message(
-                        msisdn,
-                        Poll.SHORT_LIST,
-                        Message.SINGLE_TITLE % (start_with, user_list[0]["full_name"]),
-                        Message.SINGLE_DESC % Globals.SEND_AMOUNT,
-                        Image.SHORT_LIST_URL,
-                        1,
-                        PollType.SINGLE_CHOOSE,
-                        user_tuple,
-                        "OK")
-            else:
-                self.api.single.send_text_message(msisdn, Message.NOT_FOUND % start_with)
+                    self.api.single.send_text_message(msisdn, Message.NOT_FOUND % start_with)
+        else:
+            self.api.single.send_text_message(msisdn, Message.INSUFFICIENT_FUNDS)
 
     def __send_reason_list(self, msisdn, user_id, target_user_id):
         scope_id = self.db.get_user_scope_id(user_id)
@@ -88,11 +93,14 @@ class Service:
         if len(reason_list) > 0:
             reason_tuple = get_key_value_tuple(reason_list, "id", "text")
             target_user = self.db.get_user_by_id(target_user_id)
+
             self.api.single.send_poll_message(
                 msisdn,
-                Poll.REASON_LIST + Globals.DELIMITER + str(target_user_id) + Globals.DELIMITER + hash_password(
-                    str(user_id) + self.transfer_secret + str(target_user_id)),
-                Message.REASON_LIST_TITLE % (get_name_with_suffix(target_user["first_name"]), Globals.SEND_AMOUNT),
+                "%s%s%s%s%s%s%s" % (
+                    Poll.REASON_LIST, Globals.DELIMITER, str(target_user_id), Globals.DELIMITER, str(user_id),
+                    self.transfer_secret, str(target_user_id)),
+                Message.REASON_LIST_TITLE % (
+                    get_name_with_suffix(target_user["first_name"]), Globals.SEND_AMOUNT),
                 Message.REASON_LIST_DESC,
                 Image.REASON_LIST_URL,
                 1,
@@ -105,9 +113,10 @@ class Service:
         if balance >= Globals.SEND_AMOUNT:
             if not self.db.check_user_limit(user_id, target_user_id):
                 self.api.single.send_text_message(msisdn, Message.SAME_PERSON_LIMIT % Globals.SEND_SAME_PERSON_LIMIT)
-
+                return
             elif not self.db.check_team_limit(user_id, target_user_id):
                 self.api.single.send_text_message(msisdn, Message.SAME_TEAM_LIMIT % Globals.SEND_SAME_TEAM_LIMIT)
+                return
             else:
                 self.db.transfer_points(user_id, target_user_id, reason_id)
 
@@ -120,7 +129,7 @@ class Service:
                                                      reason,
                                                      Globals.SEND_AMOUNT,
                                                      Globals.EARN_AMOUNT,
-                                                     balance))
+                                                     "{:.{}f}".format(balance, 2)))
 
                 # TODO
                 target_user = self.db.get_user_by_id(target_user_id)
@@ -128,6 +137,34 @@ class Service:
 
         else:
             self.api.single.send_text_message(msisdn, Message.INSUFFICIENT_FUNDS)
+
+    def import_user_array(self, user_array):
+        teams = {}
+        succeed = []
+        failed = []
+
+        for i in range(1, len(user_array)):
+            user_fields = user_array[i]
+            team_name = user_fields[5]
+            if team_name not in teams:
+                team_id = self.db.get_team_id_by_name(team_name)
+                if team_id is not None:
+                    teams[team_name] = team_id
+
+            if team_name in teams:
+                try:
+                    self.db.add_user(user_fields[0], user_fields[1], user_fields[2], user_fields[3], user_fields[4],
+                                     Globals.DEFAULT_PASSWD, teams[team_name])
+                    succeed.append(user_fields[0])
+                except Error as e:
+                    failed.append({"msisdn": user_fields[0], "description": str(e)})
+            else:
+                failed.append({"msisdn": user_fields[0], "description": "team[%s] is not found" % team_name})
+
+        return {
+            "succeed": succeed,
+            "failed": failed
+        }
 
     def process_bip_request(self, msg):
         if msg.sender:
@@ -157,7 +194,7 @@ class Service:
                     self.__send_reason_list(msg.sender, user_id, msg.poll_value)
 
                 elif msg.ctype == CType.POLL and msg.poll_id == Poll.REASON_LIST:
-                    if verify_password(msg.poll_secret, user_id + self.transfer_secret + msg.poll_ext):
+                    if msg.poll_secret == "%s%s%s" % (user_id, self.transfer_secret, msg.poll_ext):
                         self.__send_a_reason(msg.sender, user_id, msg.poll_ext, msg.poll_value)
                     else:
                         raise Exception("Transfer secret does not match!")
@@ -165,31 +202,3 @@ class Service:
                 else:
                     # send name list to user
                     self.__send_user_list(msg.sender, user_id, msg.command)
-
-    def import_user_array(self, user_array):
-        teams = {}
-        succeed = []
-        failed = []
-
-        for i in range(1, len(user_array)):
-            user_fields = user_array[i]
-            team_name = user_fields[5]
-            if team_name not in teams:
-                team_id = self.db.get_team_id_by_name(team_name)
-                if team_id is not None:
-                    teams[team_name] = team_id
-
-            if team_name in teams:
-                try:
-                    self.db.add_user(user_fields[0], user_fields[1], user_fields[2], user_fields[3], user_fields[4],
-                                     Globals.DEFAULT_PASSWD, teams[team_name])
-                    succeed.append(user_fields[0])
-                except Error as e:
-                    failed.append({"msisdn": user_fields[0], "description": str(e)})
-            else:
-                failed.append({"msisdn": user_fields[0], "description": "team[%s] is not found" % team_name})
-
-        return {
-            "succeed": succeed,
-            "failed": failed
-        }
