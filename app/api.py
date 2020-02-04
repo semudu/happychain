@@ -150,8 +150,8 @@ def create_app(config):
             print("User delete exception: %s" % str(e))
             return "An error occurred", 500
 
-    @basic_auth.required
     @app.route("/user", methods=["GET"])
+    @basic_auth.required
     def get_users():
         try:
             return jsonify({"result": db.get_users()})
