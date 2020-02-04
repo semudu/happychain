@@ -17,17 +17,14 @@ def create_app(config):
     app = Flask(__name__)
     app.config.from_object(config)
     excel.init_excel(app)
-
-    app.config['BASIC_AUTH_USERNAME'] = config.BASIC_AUTH_USERNAME
-    app.config['BASIC_AUTH_PASSWORD'] = config.BASIC_AUTH_PASSWORD
     basic_auth = BasicAuth(app)
 
     @app.route("/")
     def get():
         return "Pitika!!!"
 
-    @basic_auth.required
     @app.route("/scope", methods=["POST"])
+    @basic_auth.required
     def create_scope():
         try:
             if request.is_json:
@@ -42,8 +39,8 @@ def create_app(config):
             print("Scope create exception: %s" % str(e))
             return "An error occurred", 500
 
-    @basic_auth.required
     @app.route("/team", methods=["POST"])
+    @basic_auth.required
     def create_team():
         try:
             if request.is_json:
@@ -59,8 +56,8 @@ def create_app(config):
             print("Team create exception: %s" % str(e))
             return "An error occurred", 500
 
-    @basic_auth.required
     @app.route("/team/<team_id>", methods=["PUT"])
+    @basic_auth.required
     def update_team(team_id):
         try:
             if request.is_json:
@@ -76,8 +73,8 @@ def create_app(config):
             print("Team update exception: %s" % str(e))
             return "An error occurred", 500
 
-    @basic_auth.required
     @app.route("/team/<team_id>", methods=["DELETE"])
+    @basic_auth.required
     def delete_team(team_id):
         try:
             db.delete_team(team_id)
@@ -86,8 +83,8 @@ def create_app(config):
             print("Team delete exception: %s" % str(e))
             return "An error occurred", 500
 
-    @basic_auth.required
     @app.route("/team", methods=["GET"])
+    @basic_auth.required
     def get_teams():
         try:
             return jsonify({"result": db.get_teams()})
@@ -95,8 +92,8 @@ def create_app(config):
             print("Team retrieve exception: %s" % str(e))
             return "An error occurred", 500
 
-    @basic_auth.required
     @app.route("/user/upload", methods=["GET", "POST"])
+    @basic_auth.required
     def upload_user_list():
         try:
             if request.method == "POST":
@@ -118,8 +115,8 @@ def create_app(config):
             print("User import exception: %s" % str(e))
             return "An error occurred", 500
 
-    @basic_auth.required
     @app.route("/user", methods=["POST"])
+    @basic_auth.required
     def create_user():
         try:
             if request.is_json:
@@ -140,8 +137,8 @@ def create_app(config):
             print("User create exception: %s" % str(e))
             return "An error occurred", 500
 
-    @basic_auth.required
     @app.route("/user/<user_id>", methods=["DELETE"])
+    @basic_auth.required
     def delete_user(user_id):
         try:
             db.delete_user(user_id)
