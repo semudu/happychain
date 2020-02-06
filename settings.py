@@ -2,7 +2,7 @@ import os
 
 
 class Settings:
-    DEBUG = True
+    DEBUG = False
     LOG_LEVEL = "debug"
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     APP_NAME = 'HappyChain'
