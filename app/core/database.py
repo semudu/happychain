@@ -166,7 +166,7 @@ class Database:
         }
 
     def delete_user(self, identity):
-        sql = "delete from user where id = %s"
+        sql = "update user set active = 0 where id = %s"
         return self.__execute(sql, (identity,), False)
 
     def get_user_by_id(self, identity):

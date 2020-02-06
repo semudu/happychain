@@ -23,8 +23,13 @@ def create_app(config):
     def get():
         return "Pitika!!!"
 
-    @app.route("/transactions/<team_id>")
-    def get_transactions(team_id):
+    @app.route("/transactions/team/<team_id>")
+    def get_team_transactions(team_id):
+        return "..."
+
+    @app.route("/transactions/user/<user_id>")
+    @basic_auth.required
+    def get_user_transactions(team_id):
         return "..."
 
     @app.route("/scope", methods=["POST"])
@@ -41,6 +46,15 @@ def create_app(config):
                     return "Scope name is empty!", 500
         except Exception as e:
             print("Scope create exception: %s" % str(e))
+            return "An error occurred", 500
+
+    @app.route("/scope", methods=["GET"])
+    @basic_auth.required
+    def get_scopes():
+        try:
+            return jsonify({"result": db.get_scopes()})
+        except Exception as e:
+            print("Team retrieve exception: %s" % str(e))
             return "An error occurred", 500
 
     @app.route("/team", methods=["POST"])
