@@ -23,6 +23,10 @@ def create_app(config):
     def get():
         return "Pitika!!!"
 
+    @app.route("/transactions/<team_id>")
+    def get_transactions(team_id):
+        return "..."
+
     @app.route("/scope", methods=["POST"])
     @basic_auth.required
     def create_scope():
