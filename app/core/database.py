@@ -137,7 +137,7 @@ class Database:
                 cursor = conn.cursor(prepared=True)
                 sql = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id, role) values (%s,upper(%s),upper(%s),%s,%s,%s,%s,%s);"
                 cursor.execute(sql, (
-                    msisdn, first_name, last_name, gender, convert_to_date(date_of_birth, "%d/%m/%Y"),
+                    msisdn, first_name, last_name, gender, convert_to_date(date_of_birth, "%d.%m.%Y"),
                     hash_password(passwd),
                     team_id,
                     Role.USER))

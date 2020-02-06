@@ -111,8 +111,8 @@ def create_app(config):
             else:
                 data = OrderedDict
                 data.update({"Sheet 1": [
-                    ["MSISDN", "İsim", "Soyisim", "Cinsiyet (E/K)", "Doğum Tarihi (Gün/Ay/Yıl)", "Takım"],
-                    ["533210xxxx", "-", "-", "E", "01/01/1999", "ICT-AIAS-DAS-DMD"]]})
+                    ["MSISDN", "İsim", "Soyisim", "Cinsiyet (E/K)", "Doğum Tarihi (Gün.Ay.Yıl)", "Takım"],
+                    ["533210xxxx", "-", "-", "E", "01.01.1999", "ICT-AIAS-DAS-DMD"]]})
 
                 return excel.make_response_from_book_dict(data, file_type="xlsx", file_name="user_list")
         except Exception as e:
