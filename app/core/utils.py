@@ -65,6 +65,9 @@ def split_to_array(value, delimeter):
 
 
 def convert_to_date(value, fmt='%d.%m.%Y %H:%M:%S.%f'):
+    if isinstance(value, datetime.date):
+        return value
+        
     return datetime.strptime(value, fmt)
 
 
