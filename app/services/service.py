@@ -4,6 +4,8 @@ from bipwrapper.api import Api
 from bipwrapper.type import *
 from mysql.connector import Error
 
+from app.models.constants import *
+from settings import Settings
 # from .blockchain import Blockchain
 from .database import Database
 from .utils import *
@@ -12,11 +14,11 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 
 class Service:
-    def __init__(self, config):
-        self.db = Database(config)
+    def __init__(self):
+        self.db = Database()
         # self.blockchain = Blockchain(config)
-        self.transfer_secret = config.TRANSFER_SECRET
-        self.bip_api = Api(config.BIP_URL, config.BIP_USERNAME, config.BIP_PASSWORD)
+        self.transfer_secret = Settings.TRANSFER_SECRET
+        self.bip_api = Api(Settings.BIP_URL, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
 
     def __send_menu__(self, msisdn):
         self.bip_api.single.send_quickreply_message(msisdn, Poll.MENU, [

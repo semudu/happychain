@@ -4,3 +4,4 @@
 .gitsecret/keys/random_seed
 config.py
 run_local.py
+**/__pycache__/

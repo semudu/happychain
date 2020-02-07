@@ -19,3 +19,5 @@ class Settings:
     TRANSFER_SECRET = os.environ.get('TRANSFER_SECRET')
     BASIC_AUTH_USERNAME = os.environ.get('BASIC_AUTH_USERNAME')
     BASIC_AUTH_PASSWORD = os.environ.get('BASIC_AUTH_PASSWORD')
+    BASIC_AUTH_FORCE = os.environ.get('BASIC_AUTH_FORCE')
+    BASIC_AUTH_REALM = os.environ.get('BASIC_AUTH_REALM')

@@ -4,18 +4,19 @@ import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
 
-from app.models import Globals, Role
+from app.models.constants import Globals, Role
+from settings import Settings
 from .utils import hash_password, convert_to_date
 
 
 class Database:
-    def __init__(self, config):
+    def __init__(self):
         try:
-            self.connection_pool = mysql.connector.pooling.MySQLConnectionPool(host=config.DB_HOST,
-                                                                               port=config.DB_PORT,
-                                                                               database=config.DB_NAME,
-                                                                               user=config.DB_USER,
-                                                                               password=config.DB_PASSWD,
+            self.connection_pool = mysql.connector.pooling.MySQLConnectionPool(host=Settings.DB_HOST,
+                                                                               port=Settings.DB_PORT,
+                                                                               database=Settings.DB_NAME,
+                                                                               user=Settings.DB_USER,
+                                                                               password=Settings.DB_PASSWD,
                                                                                charset="utf8",
                                                                                pool_size=3)
 

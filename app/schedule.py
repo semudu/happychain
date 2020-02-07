@@ -5,15 +5,16 @@ import time
 import pycron
 import schedule
 
-from .services.database import Database
 from app.models.constants import Globals
+from .services.database import Database
 
 logging.basicConfig(format='%(levelname)s-%(thread)d:%(message)s', level=logging.DEBUG)
 
+
 class Schedule(threading.Thread):
-    def __init__(self, config):
+    def __init__(self):
         threading.Thread.__init__(self, name="jobs-thread")
-        self.db = Database(config)
+        self.db = Database()
         return
 
     def __load_balance_job(self):
@@ -44,3 +45,5 @@ class Schedule(threading.Thread):
                 time.sleep(10)
         except Exception as e:
             logging.error("send_periodically_message: " + str(e))
+        finally:
+            print("Schedule thread finished.")

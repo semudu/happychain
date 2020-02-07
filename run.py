@@ -1,13 +1,13 @@
-import app
+from app.flask_app import App
 from app.schedule import Schedule
-from settings import Settings
 
 
 def start_app():
-    config = Settings()
-    jobs = Schedule(config)
-    jobs.start()
+    scheduled_jobs = Schedule()
+    flask_app = App()
 
-    app.run(config)
+    scheduled_jobs.start()
+    flask_app.start()
 
-    jobs.join()
+    scheduled_jobs.join()
+    flask_app.join()
