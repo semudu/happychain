@@ -5,9 +5,9 @@ import flask_excel as excel
 from flask import Flask, request, jsonify
 from flask_basicauth import BasicAuth
 
-from .core.database import Database
-from .core.model.content import Content
-from .core.service import Service
+from .services.database import Database
+from app.models.content import Content
+from .services.service import Service
 
 
 def create_app(config):

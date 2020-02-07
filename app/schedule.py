@@ -1,17 +1,20 @@
 import logging
+import threading
 import time
 
 import pycron
 import schedule
 
-from .core.model.constants import Globals
+from .services.database import Database
+from app.models.constants import Globals
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(levelname)s-%(thread)d:%(message)s', level=logging.DEBUG)
 
-
-class Job:
+class Schedule(threading.Thread):
     def __init__(self, config):
-        self.config = config
+        threading.Thread.__init__(self, name="jobs-thread")
+        self.db = Database(config)
+        return
 
     def __load_balance_job(self):
         if pycron.is_now(Globals.LOAD_BALANCE_CRON):
@@ -25,9 +28,11 @@ class Job:
         logging.debug("special dates")
 
     def __birthday_job(self):
-        logging.debug("birthday")
+        users = self.db.get_birthday_users()
+        for user in users:
+            logging.debug(user["full_name"])
 
-    def send_periodically_messages(self):
+    def run(self):
         try:
             schedule.every().day.at(Globals.SPECIAL_DATE_MSG_TIME).do(self.__special_dates_job)
             schedule.every().day.at(Globals.BIRTHDAY_MSG_TIME).do(self.__birthday_job)
@@ -36,6 +41,6 @@ class Job:
 
             while True:
                 schedule.run_pending()
-                time.sleep(1)
+                time.sleep(10)
         except Exception as e:
             logging.error("send_periodically_message: " + str(e))

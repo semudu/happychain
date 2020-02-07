@@ -6,7 +6,6 @@ from mysql.connector import Error
 
 # from .blockchain import Blockchain
 from .database import Database
-from .model.constants import *
 from .utils import *
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
@@ -17,10 +16,10 @@ class Service:
         self.db = Database(config)
         # self.blockchain = Blockchain(config)
         self.transfer_secret = config.TRANSFER_SECRET
-        self.api = Api(config.BIP_URL, config.BIP_USERNAME, config.BIP_PASSWORD)
+        self.bip_api = Api(config.BIP_URL, config.BIP_USERNAME, config.BIP_PASSWORD)
 
     def __send_menu__(self, msisdn):
-        self.api.single.send_quickreply_message(msisdn, Poll.MENU, [
+        self.bip_api.single.send_quickreply_message(msisdn, Poll.MENU, [
             (Command.POINT, "💰 IMS Bakiyem", ButtonType.POST_BACK),
             (Command.LAST_SENT + Globals.DELIMITER + "5", "➡️ Son Yolladıklarım", ButtonType.POST_BACK),
             (Command.LAST_RECEIVED + Globals.DELIMITER + "5", "⬅️ Son gelenler", ButtonType.POST_BACK),
@@ -32,21 +31,21 @@ class Service:
         balance = self.db.get_balance(user_id)
         total_send = self.db.get_total_sent_transaction(user_id)
         total_received = self.db.get_total_received_transaction(user_id)
-        self.api.single.send_text_message(msisdn, Message.BALANCE % (balance, total_send, total_received))
+        self.bip_api.single.send_text_message(msisdn, Message.BALANCE % (balance, total_send, total_received))
 
     def __send_lastn_sent(self, msisdn, user_id, count):
         text = Message.LAST_SENT % count
         result = self.db.get_lastn_sent(user_id, count)
         for row in result:
             text += row["full_name"] + "\n" + row["text"] + "\n" + row["date"]
-        self.api.single.send_text_message(msisdn, text)
+        self.bip_api.single.send_text_message(msisdn, text)
 
     def __send_lastn_received(self, msisdn, user_id, count):
         text = Message.LAST_RECEIVED % count
         result = self.db.get_lastn_received(user_id, count)
         for row in result:
             text += row["full_name"] + "\n" + row["text"] + "\n" + row["date"]
-        self.api.single.send_text_message(msisdn, text)
+        self.bip_api.single.send_text_message(msisdn, text)
 
     def __send_user_list(self, msisdn, user_id, start_with):
         balance = self.db.get_balance(user_id)
@@ -57,7 +56,7 @@ class Service:
                 if len(user_list) > 0:
                     if len(user_list) > 1:
                         user_tuple = get_key_value_tuple(user_list, "id", "full_name")
-                        self.api.single.send_poll_message(
+                        self.bip_api.single.send_poll_message(
                             msisdn,
                             Poll.SHORT_LIST,
                             Message.SHORT_LIST_TITLE % start_with,
@@ -72,7 +71,7 @@ class Service:
                             (user_list[0]["id"], "Evet"),
                             (-1, "Hayır")
                         ]
-                        self.api.single.send_poll_message(
+                        self.bip_api.single.send_poll_message(
                             msisdn,
                             Poll.SHORT_LIST,
                             Message.SINGLE_TITLE % (start_with, user_list[0]["full_name"]),
@@ -83,9 +82,9 @@ class Service:
                             yes_no_tuple,
                             "OK")
                 else:
-                    self.api.single.send_text_message(msisdn, Message.NOT_FOUND % start_with)
+                    self.bip_api.single.send_text_message(msisdn, Message.NOT_FOUND % start_with)
         else:
-            self.api.single.send_text_message(msisdn, Message.INSUFFICIENT_FUNDS)
+            self.bip_api.single.send_text_message(msisdn, Message.INSUFFICIENT_FUNDS)
 
     def __send_reason_list(self, msisdn, user_id, target_user_id):
         scope_id = self.db.get_user_scope_id(user_id)
@@ -94,7 +93,7 @@ class Service:
             reason_tuple = get_key_value_tuple(reason_list, "id", "text")
             target_user = self.db.get_user_by_id(target_user_id)
 
-            self.api.single.send_poll_message(
+            self.bip_api.single.send_poll_message(
                 msisdn,
                 "%s%s%s%s%s%s%s" % (
                     Poll.REASON_LIST, Globals.DELIMITER, str(target_user_id), Globals.DELIMITER, str(user_id),
@@ -112,10 +111,11 @@ class Service:
         balance = self.db.get_balance(user_id)
         if balance >= Globals.SEND_AMOUNT:
             if not self.db.check_user_limit(user_id, target_user_id):
-                self.api.single.send_text_message(msisdn, Message.SAME_PERSON_LIMIT % Globals.SEND_SAME_PERSON_LIMIT)
+                self.bip_api.single.send_text_message(msisdn,
+                                                      Message.SAME_PERSON_LIMIT % Globals.SEND_SAME_PERSON_LIMIT)
                 return
             elif not self.db.check_team_limit(user_id, target_user_id):
-                self.api.single.send_text_message(msisdn, Message.SAME_TEAM_LIMIT % Globals.SEND_SAME_TEAM_LIMIT)
+                self.bip_api.single.send_text_message(msisdn, Message.SAME_TEAM_LIMIT % Globals.SEND_SAME_TEAM_LIMIT)
                 return
             else:
                 self.db.transfer_points(user_id, target_user_id, reason_id)
@@ -124,19 +124,19 @@ class Service:
                 reason = self.db.get_reason_by_id(reason_id)
                 balance = self.db.get_balance(user_id)
 
-                self.api.single.send_text_message(msisdn, Message.SENT_MESSAGE
-                                                  % (get_name_with_suffix(target_user["first_name"]),
-                                                     reason,
-                                                     Globals.SEND_AMOUNT,
-                                                     Globals.EARN_AMOUNT,
-                                                     "{:.{}f}".format(balance, 2)))
+                self.bip_api.single.send_text_message(msisdn, Message.SENT_MESSAGE
+                                                      % (get_name_with_suffix(target_user["first_name"]),
+                                                         reason,
+                                                         Globals.SEND_AMOUNT,
+                                                         Globals.EARN_AMOUNT,
+                                                         "{:.{}f}".format(balance, 2)))
 
                 # TODO
                 target_user = self.db.get_user_by_id(target_user_id)
-                self.api.single.send_text_message(target_user["msisdn"], "")
+                self.bip_api.single.send_text_message(target_user["msisdn"], "")
 
         else:
-            self.api.single.send_text_message(msisdn, Message.INSUFFICIENT_FUNDS)
+            self.bip_api.single.send_text_message(msisdn, Message.INSUFFICIENT_FUNDS)
 
     def import_user_array(self, user_array):
         teams = {}
@@ -171,7 +171,7 @@ class Service:
             user_id = self.db.get_user_id_by_msisdn(msg.sender)
             if user_id:
                 if msg.command == Command.HELP or msg.payload == Command.HELP:
-                    self.api.single.send_text_message(msg.sender, Message.HELP)
+                    self.bip_api.single.send_text_message(msg.sender, Message.HELP)
 
                 elif msg.command == Command.MENU:
                     self.__send_menu__(msg.sender)

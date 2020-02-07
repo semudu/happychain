@@ -3,3 +3,4 @@
 .idea/
 .gitsecret/keys/random_seed
 config.py
+run_local.py

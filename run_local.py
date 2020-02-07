@@ -1,10 +1,14 @@
+import threading
+
 import app
 from app.schedule import Schedule
-from settings import Settings
+from config import Config
+
+# from settings import Settings
 
 
-def start_app():
-    config = Settings()
+if __name__ == "__main__":
+    config = Config()
     jobs = Schedule(config)
     jobs.start()
 

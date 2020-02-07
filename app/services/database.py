@@ -4,7 +4,7 @@ import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
 
-from .model.constants import Globals, Role
+from app.models import Globals, Role
 from .utils import hash_password, convert_to_date
 
 
@@ -195,6 +195,10 @@ class Database:
         if len(user) > 0:
             return user[0]["id"]
         return -1
+
+    def get_birthday_users(self):
+        return self.__fetchall(
+            "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where dayofmonth(date_of_birth) = dayofmonth(curdate()) and month(date_of_birth) = month(curdate());")
 
     def get_wallet_by_userid(self, user_id):
         wallet = self.__fetchall("select * from wallet where user_id = %s", (user_id,))
