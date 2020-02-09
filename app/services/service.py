@@ -51,7 +51,6 @@ class Service:
 
     def __send_user_list(self, msisdn, user_id, start_with):
         balance = self.db.get_balance(user_id)
-        logging.debug("balance: %s" % balance)
         if balance >= Globals.SEND_AMOUNT:
             if len(start_with) > 0:
                 user_list = self.db.get_users_by_scope(user_id, start_with)
@@ -88,17 +87,15 @@ class Service:
         else:
             self.bip_api.single.send_text_message(msisdn, Message.INSUFFICIENT_FUNDS)
 
-    def __send_reason_list(self, msisdn, user_id, target_user_id):
-        scope_id = self.db.get_user_scope_id(user_id)
-        reason_list = self.db.get_reasons_by_scope(scope_id)
-        if len(reason_list) > 0:
-            reason_tuple = get_key_value_tuple(reason_list, "id", "text")
+    def __send_message_list(self, msisdn, user_id, target_user_id):
+        message_list = self.db.get_message_list_by_target(target_user_id)
+        if len(message_list) > 0:
+            message_tuple = get_key_value_tuple(message_list, "id", "text")
             target_user = self.db.get_user_by_id(target_user_id)
-
             self.bip_api.single.send_poll_message(
                 msisdn,
                 "%s%s%s%s%s%s%s" % (
-                    Poll.REASON_LIST, Globals.DELIMITER, str(target_user_id), Globals.DELIMITER, str(user_id),
+                    Poll.MESSAGE_LIST, Globals.DELIMITER, str(target_user_id), Globals.DELIMITER, str(user_id),
                     self.transfer_secret, str(target_user_id)),
                 Message.REASON_LIST_TITLE % (
                     get_name_with_suffix(target_user["first_name"]), Globals.SEND_AMOUNT),
@@ -106,10 +103,30 @@ class Service:
                 Image.REASON_LIST_URL,
                 1,
                 PollType.SINGLE_CHOOSE,
-                reason_tuple,
+                message_tuple,
                 "OK")
 
-    def __send_a_reason(self, msisdn, user_id, target_user_id, reason_id):
+    def __finish_transaction_message(self, msisdn, target_user, message, balance):
+        self.bip_api.single.send_text_message(msisdn, Message.SENT_MESSAGE
+                                              % (get_name_with_suffix(target_user["first_name"]),
+                                                 message,
+                                                 Globals.SEND_AMOUNT,
+                                                 Globals.EARN_AMOUNT,
+                                                 "{:.{}f}".format(balance, 2)))
+
+        # TODO
+        self.bip_api.single.send_text_message(target_user["msisdn"], "")
+
+    def __send_free_message(self, msisdn, user_id, msg_type, message):
+        if msg_type == 'T' or msg_type == 't':
+            last_transaction = self.db.update_free_message(user_id, msg_type, message)
+            target_user = self.db.get_user_by_id(last_transaction["receiver_id"])
+            balance = self.db.get_balance(user_id)
+            self.__finish_transaction_message(msisdn, target_user, message, balance)
+        else:
+            self.bip_api.single.send_text_message(msisdn, "Şimdilik maalesef sadece yazı yollayabilirsin.")
+
+    def __send_a_message(self, msisdn, user_id, target_user_id, message_id):
         balance = self.db.get_balance(user_id)
         if balance >= Globals.SEND_AMOUNT:
             if not self.db.check_user_limit(user_id, target_user_id):
@@ -120,22 +137,16 @@ class Service:
                 self.bip_api.single.send_text_message(msisdn, Message.SAME_TEAM_LIMIT % Globals.SEND_SAME_TEAM_LIMIT)
                 return
             else:
-                self.db.transfer_points(user_id, target_user_id, reason_id)
+                self.db.transfer_points(user_id, target_user_id, message_id)
 
                 target_user = self.db.get_user_by_id(target_user_id)
-                reason = self.db.get_reason_by_id(reason_id)
+                message = self.db.get_message_by_id(message_id)
                 balance = self.db.get_balance(user_id)
 
-                self.bip_api.single.send_text_message(msisdn, Message.SENT_MESSAGE
-                                                      % (get_name_with_suffix(target_user["first_name"]),
-                                                         reason,
-                                                         Globals.SEND_AMOUNT,
-                                                         Globals.EARN_AMOUNT,
-                                                         "{:.{}f}".format(balance, 2)))
-
-                # TODO
-                target_user = self.db.get_user_by_id(target_user_id)
-                self.bip_api.single.send_text_message(target_user["msisdn"], "")
+                if message_id != -1:
+                    self.__finish_transaction_message(msisdn, target_user, message, balance)
+                else:
+                    self.bip_api.single.send_text_message(msisdn, Message.FREE_MESSAGE % target_user["first_name"])
 
         else:
             self.bip_api.single.send_text_message(msisdn, Message.INSUFFICIENT_FUNDS)
@@ -193,14 +204,18 @@ class Service:
 
                 elif msg.ctype == CType.POLL and msg.poll_id == Poll.SHORT_LIST:
                     # send reason list to user
-                    self.__send_reason_list(msg.sender, user_id, msg.poll_value)
+                    self.__send_message_list(msg.sender, user_id, msg.poll_value)
 
-                elif msg.ctype == CType.POLL and msg.poll_id == Poll.REASON_LIST:
+                elif msg.ctype == CType.POLL and msg.poll_id == Poll.MESSAGE_LIST:
                     if msg.poll_secret == "%s%s%s" % (user_id, self.transfer_secret, msg.poll_ext):
-                        self.__send_a_reason(msg.sender, user_id, msg.poll_ext, msg.poll_value)
+                        self.__send_a_message(msg.sender, user_id, msg.poll_ext, msg.poll_value)
                     else:
                         raise Exception("Transfer secret does not match!")
 
                 else:
                     # send name list to user
-                    self.__send_user_list(msg.sender, user_id, msg.command)
+                    free_message_transaction = self.db.check_free_message(user_id)
+                    if free_message_transaction:
+                        self.__send_free_message(msg.sender, user_id, msg.ctype, msg.content)
+                    else:
+                        self.__send_user_list(msg.sender, user_id, msg.command)

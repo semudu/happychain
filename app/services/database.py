@@ -29,6 +29,9 @@ class Database:
 
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
+                cursor.execute('SET NAMES utf8mb4')
+                cursor.execute("SET CHARACTER SET utf8mb4")
+                cursor.execute("SET character_set_connection=utf8mb4")
                 cursor.execute(sql, params)
                 result = cursor.fetchone()
                 return result[0] if result else None
@@ -47,6 +50,9 @@ class Database:
 
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
+                cursor.execute('SET NAMES utf8mb4')
+                cursor.execute("SET CHARACTER SET utf8mb4")
+                cursor.execute("SET character_set_connection=utf8mb4")
                 cursor.execute(sql, params)
                 row_headers = [x[0] for x in cursor.description]
                 row_values = cursor.fetchall()
@@ -70,6 +76,9 @@ class Database:
 
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
+                cursor.execute('SET NAMES utf8mb4')
+                cursor.execute("SET CHARACTER SET utf8mb4")
+                cursor.execute("SET character_set_connection=utf8mb4")
                 result = cursor.execute(sql, params)
                 conn.commit()
                 if insert:
@@ -184,12 +193,12 @@ class Database:
 
     def get_users_by_scope(self, user_id, start_with=""):
         return self.__fetchall(
-            "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u, team t, scope s where "
-            "s.id = t.scope_id "
-            "and t.id = u.team_id "
-            "and u.id != %s "
-            "and s.id = (select scope_id from user where id = %s) "
-            "and first_name like %s", (user_id, user_id, start_with + "%"))
+            "select u.*, concat(u.first_name, ' ', u.last_name) as full_name from user u "
+            "where u.id != %s "
+            "and u.team_id in (select id from team "
+            "where scope_id = (select s.id from scope s, team t, user u "
+            "where u.team_id = t.id and t.scope_id = s.id and u.id = %s)) and first_name like %s;",
+            (user_id, user_id, start_with + "%"))
 
     def get_user_id_by_msisdn(self, msisdn):
         user = self.__fetchall("select * from user where msisdn = %s", (msisdn,))
@@ -220,38 +229,35 @@ class Database:
         return result if result else 0
 
     def get_lastn_sent(self, user_id, count):
-        sql = 'select distinct u.full_name, r.text, date_format(t.transaction_date,"%d %M, %W") date from transaction t, user u, reason r where t.receiver_id = u.id and t.reason_id = r.id and t.is_active = 1 and t.sender_id = %s order by t.transaction_date desc limit %s;'
+        sql = 'select distinct u.full_name, m.text, date_format(t.date,"%d %M, %W") date from transaction t, user u, message m where t.receiver_id = u.id and t.message_id = r.id and t.is_active = 1 and t.sender_id = %s order by t.date desc limit %s;'
         return self.__fetchall(sql, (user_id, count))
 
     def get_lastn_received(self, user_id, count):
-        sql = 'select distinct u.full_name, r.text, date_format(t.transaction_date,"%d %M, %W") date from transaction t, user u, reason r where t.sender_id = u.id and t.reason_id = r.id and t.is_active = 1 and t.receiver_id = %s order by t.transaction_date desc limit %s;'
+        sql = 'select distinct u.full_name, m.text, date_format(t.date,"%d %M, %W") date from transaction t, user u, message m where t.sender_id = u.id and t.message_id = r.id and t.is_active = 1 and t.receiver_id = %s order by t.date desc limit %s;'
         return self.__fetchall(sql, (user_id, count))
 
-    def get_reasons_by_scope(self, scope_id):
-        sql = "select * from reason where " \
-              "active=1 " \
-              "and scope_id = %s " \
-              "and (special_date is null or special_date = CURRENT_DATE()) " \
-              "order by special_date desc, id asc;"
-        return self.__fetchall(sql, (scope_id,))
+    def get_message_list_by_target(self, target_user_id):
+        sql = "select r.id, r.text from ( select * from message where direction = 'IN' and type = 'D' and exists(select * from user u where dayofmonth(date_of_birth) = dayofmonth(curdate()) and month(date_of_birth) = month(curdate()) and id = %s) union select * from message where direction = 'IN' and SPLIT_STRING(date, '/', 1) = dayofmonth(curdate()) and SPLIT_STRING(date, '/', 2) = month(curdate()) and (type is null or type = (select gender from user where id = %s)) union select m.* from message m, team t, user u where u.id = %s and u.team_id = t.id and m.direction = 'IN' and (m.type is null or m.type in ('K', 'E')) and m.date is null and ((exists(select * from message where scope_id = t.scope_id) and m.scope_id = t.scope_id) or (not exists(select * from message where scope_id = t.scope_id) and m.scope_id = 0))) r order by r.date desc, r.type desc, r.id asc limit 6;"
 
-    def get_reason_by_id(self, reason_id):
-        result = self.__fetchone("select text from reason where id = %s;", (reason_id,))
+        return self.__fetchall(sql, (target_user_id, target_user_id, target_user_id))
+
+    def get_message_by_id(self, message_id):
+        result = self.__fetchone("select text from message where id = %s;", (message_id,))
         return result if result else None
 
     def get_balance(self, user_id):
         result = self.__fetchone("select balance from wallet where user_id = %s;", (user_id,))
         return Decimal(result) if result else 0
 
-    def transfer_points(self, sender_id, receiver_id, reason_id):
+    def transfer_points(self, sender_id, receiver_id, message_id):
         try:
             conn = self.connection_pool.get_connection()
 
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
                 cursor.execute(
-                    "insert into transaction (sender_id, receiver_id, amount, transaction_date, reason_id, is_active) values (%s,%s,%s,CURRENT_TIMESTAMP(),%s,1);"
-                    , (sender_id, receiver_id, Globals.SEND_AMOUNT, reason_id))
+                    "insert into transaction (sender_id, receiver_id, amount, date, message_id, is_active) values (%s,%s,%s,CURRENT_TIMESTAMP(),%s,1);"
+                    , (sender_id, receiver_id, Globals.SEND_AMOUNT, message_id))
 
                 cursor.execute("update wallet set balance = balance - %s where user_id = %s",
                                (Globals.SEND_AMOUNT - Globals.EARN_AMOUNT, sender_id))
@@ -271,7 +277,7 @@ class Database:
 
     def check_user_limit(self, sender_id, receiver_id) -> bool:
         count = self.__fetchone(
-            "select count(*) from transaction where sender_id = %s and receiver_id = %s and transaction_date = curdate() and is_active = 1;",
+            "select count(*) from transaction where sender_id = %s and receiver_id = %s and date = curdate() and is_active = 1;",
             (sender_id, receiver_id))
         if count is not None and count > Globals.SEND_SAME_PERSON_LIMIT:
             return False
@@ -282,7 +288,7 @@ class Database:
         count = self.__fetchone(
             "select count(*) from transaction t, user u "
             "where t.sender_id = u.id "
-            "and t.transaction_date = curdate() "
+            "and t.date = curdate() "
             "and t.is_active = 1 "
             "and t.sender_id = %s "
             "and u.team_id = (select team_id from user where id = %s)", (sender_id, receiver_id,))
@@ -299,3 +305,22 @@ class Database:
                                  (scope_id, message_name, message_name, scope_id, message_name))
 
         return result if result else ""
+
+    def check_free_message(self, user_id):
+        last_transaction = self.__fetchall(
+            "select * from transaction where sender_id = %s and is_active = 1 order by id desc limit 1",
+            (user_id,))
+
+        if last_transaction and last_transaction[0]["message_id"] == -1 and not last_transaction[0]["free_message"]:
+            return last_transaction[0]
+
+        return None
+
+    def update_free_message(self, user_id, msg_type, message):
+        last_transaction = self.check_free_message(user_id)
+
+        free_message = '{"type":"%s","content":"%s"}' % (msg_type, message)
+        sql = "update transaction set free_message = %s where id = %s"
+        self.__execute(sql, (free_message, last_transaction["id"]), False)
+
+        return last_transaction

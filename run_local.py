@@ -1,17 +1,18 @@
-import threading
-
-import app
+from app.flask_app import App
 from app.schedule import Schedule
-from config import Config
-
-# from settings import Settings
-
 
 if __name__ == "__main__":
-    config = Config()
-    jobs = Schedule(config)
-    jobs.start()
+    try:
+        scheduled_jobs = Schedule()
+        flask_app = App()
+        scheduled_jobs.setDaemon(True)
+        flask_app.setDaemon(True)
 
-    app.run(config)
+        scheduled_jobs.start()
+        flask_app.start()
 
-    jobs.join()
+        scheduled_jobs.join()
+        flask_app.join()
+
+    except (KeyboardInterrupt, SystemExit):
+        print("Threads finished.")

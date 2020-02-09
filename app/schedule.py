@@ -33,6 +33,9 @@ class Schedule(threading.Thread):
         for user in users:
             logging.debug(user["full_name"])
 
+    def __reminder_job(self):
+        logging.debug("send reminder to deactive users")
+
     def run(self):
         try:
             schedule.every().day.at(Globals.SPECIAL_DATE_MSG_TIME).do(self.__special_dates_job)

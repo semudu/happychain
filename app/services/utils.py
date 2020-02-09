@@ -1,9 +1,9 @@
 import binascii
 import codecs
+import datetime
 import hashlib
 import os
 import re
-import datetime
 
 import base58
 import ecdsa
@@ -67,7 +67,7 @@ def split_to_array(value, delimeter):
 def convert_to_date(value, fmt='%d.%m.%Y %H:%M:%S.%f'):
     if isinstance(value, (datetime.date, datetime.datetime)):
         return value
-        
+
     return datetime.datetime.strptime(value, fmt)
 
 
@@ -100,3 +100,7 @@ def get_name_with_suffix(name) -> str:
             return "%s'e" % name
 
     return name
+
+
+def is_after_minutes(date, minutes):
+    return (datetime.datetime.now() - datetime.timedelta(minutes=minutes)) > date
