@@ -297,14 +297,12 @@ class Database:
 
         return True
 
-    def get_message(self, scope_id, message_name):
-        result = self.__fetchone("select text from message where scope_id= %s and name = %s "
-                                 "union all "
-                                 "select text from message where scope_id = 0 and name = %s and not exist("
-                                 "select * from message where scope_id = %s and name = %s)",
-                                 (scope_id, message_name, message_name, scope_id, message_name))
-
-        return result if result else ""
+    def get_out_message(self, scope_id, message_type):
+        return self.__fetchall("select text from message where scope_id=%s and type=%s and direction='OUT'"
+                               "union all "
+                               "select text from message where scope_id=0 and type=%s and direction='OUT' and not exists("
+                               "select * from message where scope_id=%s and type=%s and direction='OUT')",
+                               (scope_id, message_type, message_type, scope_id, message_type))
 
     def check_free_message(self, user_id):
         last_transaction = self.__fetchall(

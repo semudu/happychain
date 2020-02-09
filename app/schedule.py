@@ -1,11 +1,14 @@
+import json
 import logging
 import threading
 import time
 
 import pycron
 import schedule
+from bipwrapper.api import Api
 
 from app.models.constants import Globals
+from settings import Settings
 from .services.database import Database
 
 logging.basicConfig(format='%(levelname)s-%(thread)d:%(message)s', level=logging.DEBUG)
@@ -15,6 +18,7 @@ class Schedule(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self, name="jobs-thread")
         self.db = Database()
+        self.bip_api = Api(Settings.BIP_URL, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
         return
 
     def __load_balance_job(self):
@@ -30,8 +34,18 @@ class Schedule(threading.Thread):
 
     def __birthday_job(self):
         users = self.db.get_birthday_users()
-        for user in users:
-            logging.debug(user["full_name"])
+        if len(users) > 0:
+            for user in users:
+                scope_id = self.db.get_user_scope_id(user["id"])
+                message = self.db.get_out_message(scope_id, 'D')
+                if len(message) > 0:
+                    target_users = self.db.get_users_by_scope(user["id"])
+                    if len(target_users) > 0:
+                        message_json = json.loads(message[0]["text"])
+                        for target_user in target_users:
+                            if target_user["id"] != user["id"]:
+                                self.bip_api.single.send_text_message(target_user["msisdn"],
+                                                                      message_json["message"] % user["full_name"])
 
     def __reminder_job(self):
         logging.debug("send reminder to deactive users")

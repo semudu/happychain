@@ -114,7 +114,7 @@ class Service:
                                                  Globals.EARN_AMOUNT,
                                                  "{:.{}f}".format(balance, 2)))
 
-        # TODO
+        # TODO quick reply
         self.bip_api.single.send_text_message(target_user["msisdn"], "")
 
     def __send_free_message(self, msisdn, user_id, msg_type, message):
@@ -124,6 +124,7 @@ class Service:
             balance = self.db.get_balance(user_id)
             self.__finish_transaction_message(msisdn, target_user, message, balance)
         else:
+            # TODO other messsage types
             self.bip_api.single.send_text_message(msisdn, "Şimdilik maalesef sadece yazı yollayabilirsin.")
 
     def __send_a_message(self, msisdn, user_id, target_user_id, message_id):
