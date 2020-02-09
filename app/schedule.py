@@ -8,6 +8,7 @@ import schedule
 from bipwrapper.api import Api
 
 from app.models.constants import Globals
+from app.services.utils import get_name_with_own_suffix
 from settings import Settings
 from .services.database import Database
 
@@ -22,33 +23,50 @@ class Schedule(threading.Thread):
         return
 
     def __load_balance_job(self):
-        if pycron.is_now(Globals.LOAD_BALANCE_CRON):
-            logging.debug("load balance")
+        try:
+            if pycron.is_now(Globals.LOAD_BALANCE_CRON):
+                logging.debug("load balance")
+        except Exception as e:
+            logging.error("An error occured in load balance job: " + str(e))
 
     def _reset_balance_job(self):
-        if pycron.is_now(Globals.RESET_BALANCE_CRON):
-            logging.debug("reset balance")
+        try:
+            if pycron.is_now(Globals.RESET_BALANCE_CRON):
+                logging.debug("reset balance")
+        except Exception as e:
+            logging.error("An error occured in reset balance job: " + str(e))
 
     def __special_dates_job(self):
-        logging.debug("special dates")
+        try:
+            logging.debug("special dates")
+        except Exception as e:
+            logging.error("An error occured in special date job: " + str(e))
 
     def __birthday_job(self):
-        users = self.db.get_birthday_users()
-        if len(users) > 0:
-            for user in users:
-                scope_id = self.db.get_user_scope_id(user["id"])
-                message = self.db.get_out_message(scope_id, 'D')
-                if len(message) > 0:
-                    target_users = self.db.get_users_by_scope(user["id"])
-                    if len(target_users) > 0:
-                        message_json = json.loads(message[0]["text"])
-                        for target_user in target_users:
-                            if target_user["id"] != user["id"]:
-                                self.bip_api.single.send_text_message(target_user["msisdn"],
-                                                                      message_json["message"] % user["full_name"])
+        try:
+            users = self.db.get_birthday_users()
+            if len(users) > 0:
+                for user in users:
+                    scope_id = self.db.get_user_scope_id(user["id"])
+                    message = self.db.get_out_message(scope_id, 'D')
+                    if len(message) > 0:
+                        target_users = self.db.get_users_by_scope(user["id"])
+                        if len(target_users) > 0:
+                            message_json = json.loads(message[0]["text"])
+                            for target_user in target_users:
+                                if target_user["id"] != user["id"]:
+                                    self.bip_api.single.send_text_message(target_user["msisdn"],
+                                                                          message_json[
+                                                                              "message"] % get_name_with_own_suffix(
+                                                                              user["full_name"]))
+        except Exception as e:
+            logging.error("An error occured in birthday job: " + str(e))
 
     def __reminder_job(self):
-        logging.debug("send reminder to deactive users")
+        try:
+            logging.debug("send reminder to deactive users")
+        except Exception as e:
+            logging.error("An error occured in reminder job: " + str(e))
 
     def run(self):
         try:

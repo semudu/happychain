@@ -196,8 +196,12 @@ def get_users():
 
 @api.route("/bip", methods=["POST"])
 def bip_process():
-    if request.is_json:
-        service.process_bip_request(Content(request.get_json()))
-        return 'JSON posted'
-    else:
-        return "Content Type must be JSON!"
+    try:
+        if request.is_json:
+            service.process_bip_request(Content(request.get_json()))
+            return 'JSON posted'
+        else:
+            return "Content Type must be JSON!"
+    except Exception as e:
+        print("Bip process exception: %s" % str(e))
+        return "An error occurred", 500

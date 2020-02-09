@@ -102,5 +102,22 @@ def get_name_with_suffix(name) -> str:
     return name
 
 
+def get_name_with_own_suffix(name) -> str:
+    vowels = 'aıouAIOUeiöüEİÖÜ'
+
+    if vowels.find(str(name[-1:])) != -1:
+        if vowels.find(str(name[-1:])) < 9:
+            return "%s' nın" % name
+        else:
+            return "%s' nin" % name
+    else:
+        if vowels.find(str(name[-2:1])) < 9:
+            return "%s' ın" % name
+        else:
+            return "%s' in" % name
+
+    return name
+
+
 def is_after_minutes(date, minutes):
     return (datetime.datetime.now() - datetime.timedelta(minutes=minutes)) > date
