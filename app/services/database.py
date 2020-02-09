@@ -297,6 +297,10 @@ class Database:
 
         return True
 
+    def get_special_dates(self):
+        return self.__fetchall(
+            "select * from message where direction = 'OUT' and type='S' and scope_id = 0 and split_string(date,'/',1) = dayofmonth(curdate()) and split_string(date,'/',2) = month(curdate())")
+
     def get_out_message(self, scope_id, message_type):
         return self.__fetchall("select text from message where scope_id=%s and type=%s and direction='OUT'"
                                "union all "
@@ -322,3 +326,32 @@ class Database:
         self.__execute(sql, (free_message, last_transaction["id"]), False)
 
         return last_transaction
+
+    def load_balance_all(self, amount):
+        return self.__execute("update wallet set balance = balance + %s", (amount,), False)
+
+    def reset_balance_all(self, amount):
+        try:
+            conn = self.connection_pool.get_connection()
+
+            if conn.is_connected():
+                cursor = conn.cursor(prepared=True)
+                cursor.execute(
+                    "update wallet set balance = %s"
+                    , (amount,))
+
+                cursor.execute(
+                    "insert into transaction_archive (date, archive_date, sender_id, receiver_id, message_id, free_text, amount) "
+                    "select date, curdate(), sender_id, receiver_id, message_id, free_text, amount from transaction where is_active = 1")
+
+                cursor.execute("truncate table transaction")
+
+                conn.commit()
+
+        except mysql.connector.Error as e:
+            conn.rollback()
+            raise e
+        finally:
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                conn.close()

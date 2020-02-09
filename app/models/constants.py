@@ -33,6 +33,7 @@ class Poll:
     MENU = "__menu"
     SHORT_LIST = "__short_list"
     MESSAGE_LIST = "__message_list"
+    QUICK_REPLY = "__quick_reply"
 
 
 class Image:
@@ -57,3 +58,4 @@ class Message:
     INSUFFICIENT_FUNDS = "Tüm bakiyeni harcamışsın. 👏 Bir süre beklemen gerekicek maalesef. Eminim güzel bir geri dönüşü olacaktır 😊"
     SENT_MESSAGE = "%s\n\n%s\n\nmesajını da ileterek %s IMS yolladın ve bu gönderimden sen de %s IMS kazanmış oldun 👏\n\nMevcut bakiyen: %s IMS"
     FREE_MESSAGE = "Yazacağın ilk mesaj %s gönderilecek."
+    RECEIVED_MESSAGE = "%s sana aşağıdaki mesajla birlikte %s IMS yolladı."

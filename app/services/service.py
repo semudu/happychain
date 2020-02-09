@@ -1,6 +1,6 @@
 import logging
 
-from bipwrapper.api import Api
+from bipwrapper.api import API
 from bipwrapper.type import *
 from mysql.connector import Error
 
@@ -18,7 +18,7 @@ class Service:
         self.db = Database()
         # self.blockchain = Blockchain(config)
         self.transfer_secret = Settings.TRANSFER_SECRET
-        self.bip_api = Api(Settings.BIP_URL, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
+        self.bip_api = API(Settings.BIP_URL, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
 
     def __send_menu__(self, msisdn):
         self.bip_api.single.send_quickreply_message(msisdn, Poll.MENU, [
