@@ -199,9 +199,8 @@ def bip_process():
     try:
         if request.is_json:
             service.process_bip_request(Content(request.get_json()))
-            return 'JSON posted'
-        else:
-            return "Content Type must be JSON!"
+
+        return "", 200
     except Exception as e:
         print("Bip process exception: %s" % str(e))
-        return "An error occurred", 500
+        return "", 200
