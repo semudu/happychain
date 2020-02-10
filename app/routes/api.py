@@ -1,3 +1,5 @@
+import logging
+import threading
 from collections import OrderedDict
 from typing import OrderedDict
 
@@ -19,6 +21,7 @@ excel.init_excel(api)
 
 basic_auth = BasicAuth(api)
 
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 @api.record
 def record_params(setup_state):
@@ -198,9 +201,11 @@ def get_users():
 def bip_process():
     try:
         if request.is_json:
-            service.process_bip_request(Content(request.get_json()))
-
+            content = Content(request.get_json())
+            t = threading.Thread(target=service.process_bip_request, args=(content,))
+            t.start()
         return "", 200
+
     except Exception as e:
         print("Bip process exception: %s" % str(e))
         return "", 200
