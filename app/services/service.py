@@ -106,7 +106,7 @@ class Service:
                 message_tuple,
                 "OK")
 
-    def __finish_transaction_message(self, msisdn, target_user, message, balance):
+    def __finish_transaction_message(self, msisdn, user_id, target_user, message, balance):
         self.bip_api.single.send_text_message(msisdn, Message.SENT_MESSAGE
                                               % (get_name_with_suffix(target_user["first_name"]),
                                                  message,
@@ -115,14 +115,16 @@ class Service:
                                                  "{:.{}f}".format(balance, 2)))
 
         # TODO quick reply
-        self.bip_api.single.send_text_message(target_user["msisdn"], "")
+        user = self.db.get_user_by_id(user_id)
+        self.bip_api.single.send_text_message(target_user["msisdn"], Message.RECEIVED_MESSAGE % (
+            user["full_name"], Globals.SEND_AMOUNT, message))
 
     def __send_free_message(self, msisdn, last_transaction, msg_type, message):
         if msg_type == 'T' or msg_type == 't':
             target_user = self.db.get_user_by_id(last_transaction["receiver_id"])
             balance = self.db.get_balance(last_transaction["sender_id"])
             self.db.update_free_message(last_transaction, msg_type, message)
-            self.__finish_transaction_message(msisdn, target_user, message, balance)
+            self.__finish_transaction_message(msisdn, last_transaction["sender_id"], target_user, message, balance)
         else:
             # TODO other messsage types
             self.bip_api.single.send_text_message(msisdn, "Şimdilik maalesef sadece yazı yollayabilirsin.")
@@ -145,7 +147,7 @@ class Service:
                 balance = self.db.get_balance(user_id)
 
                 if message_id != -1:
-                    self.__finish_transaction_message(msisdn, target_user, message, balance)
+                    self.__finish_transaction_message(msisdn, user_id, target_user, message, balance)
                 else:
                     self.bip_api.single.send_text_message(msisdn, Message.FREE_MESSAGE % target_user["first_name"])
 
