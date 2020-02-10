@@ -190,6 +190,9 @@ class Database:
             "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where first_name like %s",
             (start_with + "%",))
 
+    def get_all_msisdn_list(self):
+        return self.__fetchall("select msisdn from user")
+
     def get_users_by_scope(self, user_id, start_with=""):
         return self.__fetchall(
             "select u.*, concat(u.first_name, ' ', u.last_name) as full_name from user u "
@@ -321,6 +324,9 @@ class Database:
         self.__execute(sql, (free_message, transaction["id"]), False)
 
         return transaction
+
+    def load_balance_user(self, user_id, amount):
+        return self.__execute("update wallet set balance = balance + %s where user_id = %s", (amount, user_id), False)
 
     def load_balance_all(self, amount):
         return self.__execute("update wallet set balance = balance + %s", (amount,), False)

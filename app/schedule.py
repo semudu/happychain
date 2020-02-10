@@ -7,7 +7,7 @@ import pycron
 import schedule
 from bipwrapper.api import API
 
-from app.models.constants import Globals
+from app.models.constants import Globals, Message
 from app.services.utils import get_name_with_own_suffix
 from settings import Settings
 from .services.database import Database
@@ -26,7 +26,9 @@ class Schedule(threading.Thread):
         try:
             if pycron.is_now(Globals.LOAD_BALANCE_CRON):
                 self.db.load_balance_all(Globals.LOAD_BALANCE_AMOUNT)
-                # TODO all message
+                receivers = list(map(lambda msisdn: msisdn["msisdn"], self.db.get_all_msisdn_list()))
+                self.bip_api.multi(receivers, Message.LOAD_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
+
         except Exception as e:
             logging.error("An error occured in load balance job: " + str(e))
 
@@ -34,7 +36,8 @@ class Schedule(threading.Thread):
         try:
             if pycron.is_now(Globals.RESET_BALANCE_CRON):
                 self.db.reset_balance_all(Globals.LOAD_BALANCE_AMOUNT)
-                # TODO all message
+                receivers = list(map(lambda msisdn: msisdn["msisdn"], self.db.get_all_msisdn_list()))
+                self.bip_api.multi(receivers, Message.RESET_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
 
         except Exception as e:
             logging.error("An error occured in reset balance job: " + str(e))
@@ -68,6 +71,10 @@ class Schedule(threading.Thread):
                                 self.bip_api.multi.send_text_message(receivers, message_json[
                                     "message"] % get_name_with_own_suffix(
                                     user["full_name"]))
+                            self.bip_api.single.send_text_message(user["msisdn"],
+                                                                  Message.BIRTHDAY_MESSAGE % user["first_name"],
+                                                                  Globals.LOAD_BALANCE_AMOUNT)
+                            self.db.load_balance_user(user["id"], Globals.LOAD_BALANCE_AMOUNT)
 
         except Exception as e:
             logging.error("An error occured in birthday job: " + str(e))
