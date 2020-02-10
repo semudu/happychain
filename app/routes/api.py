@@ -208,4 +208,4 @@ def bip_process():
 
     except Exception as e:
         print("Bip process exception: %s" % str(e))
-        return "", 200
+        return "", 500

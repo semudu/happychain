@@ -117,11 +117,11 @@ class Service:
         # TODO quick reply
         self.bip_api.single.send_text_message(target_user["msisdn"], "")
 
-    def __send_free_message(self, msisdn, user_id, msg_type, message):
+    def __send_free_message(self, msisdn, last_transaction, msg_type, message):
         if msg_type == 'T' or msg_type == 't':
-            last_transaction = self.db.update_free_message(user_id, msg_type, message)
             target_user = self.db.get_user_by_id(last_transaction["receiver_id"])
-            balance = self.db.get_balance(user_id)
+            balance = self.db.get_balance(last_transaction["sender_id"])
+            self.db.update_free_message(last_transaction, msg_type, message)
             self.__finish_transaction_message(msisdn, target_user, message, balance)
         else:
             # TODO other messsage types
@@ -217,6 +217,6 @@ class Service:
                     # send name list to user
                     free_message_transaction = self.db.check_free_message(user_id)
                     if free_message_transaction:
-                        self.__send_free_message(msg.sender, user_id, msg.ctype, msg.content)
+                        self.__send_free_message(msg.sender, free_message_transaction, msg.ctype, msg.content)
                     else:
                         self.__send_user_list(msg.sender, user_id, msg.command)

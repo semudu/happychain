@@ -18,7 +18,7 @@ class Database:
                                                                                user=Settings.DB_USER,
                                                                                password=Settings.DB_PASSWD,
                                                                                charset="utf8",
-                                                                               pool_size=3)
+                                                                               pool_size=10)
 
         except Error as e:
             print("Error while connecting to MySQL", e)
@@ -40,14 +40,14 @@ class Database:
         except Error as e:
             raise e
         finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
-                conn.close()
+            cursor.close()
+            # if conn is not None and conn.is_connected():
+            #     cursor.close()
+            #     conn.close()
 
     def __fetchall(self, sql: str, params: tuple = ()) -> dict:
         try:
             conn = self.connection_pool.get_connection()
-
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
                 cursor.execute('SET NAMES utf8mb4')
@@ -59,16 +59,16 @@ class Database:
                 json_result = []
                 for result in row_values:
                     json_result.append(dict(zip(row_headers, result)))
-
                 return json_result
             else:
                 raise Exception("Connection is not connected!")
         except Error as e:
             raise e
         finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
-                conn.close()
+            cursor.close()
+            # if conn is not None and conn.is_connected():
+            # cursor.close()
+            # conn.close()
 
     def __execute(self, sql: str, params: tuple, insert: bool) -> object:
         try:
@@ -91,9 +91,10 @@ class Database:
         except Error as e:
             raise e
         finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
-                conn.close()
+            cursor.close()
+            # if conn is not None and conn.is_connected():
+            #     cursor.close()
+            #     conn.close()
 
     def add_scope(self, scope_name):
         sql = "insert into scope (`name`) values (%s);"
@@ -201,10 +202,8 @@ class Database:
             (user_id, user_id, start_with + "%"))
 
     def get_user_id_by_msisdn(self, msisdn):
-        user = self.__fetchall("select * from user where msisdn = %s", (msisdn,))
-        if len(user) > 0:
-            return user[0]["id"]
-        return -1
+        user_id = self.__fetchone("select id from user where msisdn = %s", (msisdn,))
+        return user_id if user_id else None
 
     def get_birthday_users(self):
         return self.__fetchall(
@@ -310,22 +309,20 @@ class Database:
 
     def check_free_message(self, user_id):
         last_transaction = self.__fetchall(
-            "select * from transaction where sender_id = %s and is_active = 1 order by id desc limit 1",
+            "select * from transaction where sender_id = %s and is_active = 1 and message_id=-1 and free_message is null and date(date) = date(curdate()) order by id desc limit 1",
             (user_id,))
 
-        if last_transaction and last_transaction[0]["message_id"] == -1 and not last_transaction[0]["free_message"]:
+        if last_transaction:
             return last_transaction[0]
 
         return None
 
-    def update_free_message(self, user_id, msg_type, message):
-        last_transaction = self.check_free_message(user_id)
-
+    def update_free_message(self, transaction, msg_type, message):
         free_message = '{"type":"%s","content":"%s"}' % (msg_type, message)
         sql = "update transaction set free_message = %s where id = %s"
-        self.__execute(sql, (free_message, last_transaction["id"]), False)
+        self.__execute(sql, (free_message, transaction["id"]), False)
 
-        return last_transaction
+        return transaction
 
     def load_balance_all(self, amount):
         return self.__execute("update wallet set balance = balance + %s", (amount,), False)
