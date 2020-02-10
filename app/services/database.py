@@ -40,10 +40,9 @@ class Database:
         except Error as e:
             raise e
         finally:
-            cursor.close()
-            # if conn is not None and conn.is_connected():
-            #     cursor.close()
-            #     conn.close()
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                # conn.close()
 
     def __fetchall(self, sql: str, params: tuple = ()) -> dict:
         try:
@@ -65,10 +64,9 @@ class Database:
         except Error as e:
             raise e
         finally:
-            cursor.close()
-            # if conn is not None and conn.is_connected():
-            # cursor.close()
-            # conn.close()
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                # conn.close()
 
     def __execute(self, sql: str, params: tuple, insert: bool) -> object:
         try:
@@ -91,10 +89,9 @@ class Database:
         except Error as e:
             raise e
         finally:
-            cursor.close()
-            # if conn is not None and conn.is_connected():
-            #     cursor.close()
-            #     conn.close()
+            if conn is not None and conn.is_connected():
+                cursor.close()
+                # conn.close()
 
     def add_scope(self, scope_name):
         sql = "insert into scope (`name`) values (%s);"
