@@ -1,5 +1,4 @@
 import logging
-import threading
 from collections import OrderedDict
 
 import flask_excel as excel
@@ -10,7 +9,7 @@ from app.models.content import Content
 from app.services.database import Database
 from app.services.service import Service
 
-api = Blueprint('app', __name__, None)
+api = Blueprint('api', __name__, None)
 api.config = {}
 
 db = Database()
@@ -202,8 +201,7 @@ def bip_process():
     try:
         if request.is_json:
             content = Content(request.get_json())
-            t = threading.Thread(target=service.process_bip_request, args=(content,))
-            t.start()
+            service.process_bip_request(content)
         return "", 200
 
     except Exception as e:

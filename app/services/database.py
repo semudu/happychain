@@ -1,4 +1,3 @@
-import datetime
 from decimal import *
 
 import mysql.connector
@@ -49,26 +48,19 @@ class Database:
 
     def __fetchall(self, sql: str, params: tuple = ()) -> dict:
         try:
-            print("1: %s" % datetime.datetime.now())
             conn = self.connection_pool.get_connection()
-            print("2: %s" % datetime.datetime.now())
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
-                print("3: %s" % datetime.datetime.now())
                 cursor.execute('SET NAMES utf8mb4')
                 cursor.execute("SET CHARACTER SET utf8mb4")
                 cursor.execute("SET character_set_connection=utf8mb4")
-                print("4: %s" % datetime.datetime.now())
                 cursor.execute(sql, params)
-                print("5: %s" % datetime.datetime.now())
                 row_headers = [x[0] for x in cursor.description]
                 row_values = cursor.fetchall()
                 cursor.close()
-                print("6: %s" % datetime.datetime.now())
                 json_result = []
                 for result in row_values:
                     json_result.append(dict(zip(row_headers, result)))
-                print("7: %s" % datetime.datetime.now())
                 return json_result
             else:
                 raise Exception("Connection is not connected!")
