@@ -1,3 +1,4 @@
+import datetime
 from decimal import *
 
 import mysql.connector
@@ -18,7 +19,7 @@ class Database:
                                                                                user=Settings.DB_USER,
                                                                                password=Settings.DB_PASSWD,
                                                                                charset="utf8",
-                                                                               pool_size=10,
+                                                                               pool_size=5,
                                                                                pool_reset_session=True)
 
         except Error as e:
@@ -35,44 +36,52 @@ class Database:
                 cursor.execute("SET character_set_connection=utf8mb4")
                 cursor.execute(sql, params)
                 result = cursor.fetchone()
+                cursor.close()
+
                 return result[0] if result else None
             else:
                 raise Exception("Connection is not connected!")
         except Error as e:
             raise e
         finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
+            if conn is not None:
                 conn.close()
 
     def __fetchall(self, sql: str, params: tuple = ()) -> dict:
         try:
+            print("1: %s" % datetime.datetime.now())
             conn = self.connection_pool.get_connection()
+            print("2: %s" % datetime.datetime.now())
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
+                print("3: %s" % datetime.datetime.now())
                 cursor.execute('SET NAMES utf8mb4')
                 cursor.execute("SET CHARACTER SET utf8mb4")
                 cursor.execute("SET character_set_connection=utf8mb4")
+                print("4: %s" % datetime.datetime.now())
                 cursor.execute(sql, params)
+                print("5: %s" % datetime.datetime.now())
                 row_headers = [x[0] for x in cursor.description]
                 row_values = cursor.fetchall()
+                cursor.close()
+                print("6: %s" % datetime.datetime.now())
                 json_result = []
                 for result in row_values:
                     json_result.append(dict(zip(row_headers, result)))
+                print("7: %s" % datetime.datetime.now())
                 return json_result
             else:
                 raise Exception("Connection is not connected!")
         except Error as e:
             raise e
         finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
+            if conn is not None:
                 conn.close()
 
     def __execute(self, sql: str, params: tuple, insert: bool) -> object:
         try:
             conn = self.connection_pool.get_connection()
-
+            result = None
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
                 cursor.execute('SET NAMES utf8mb4')
@@ -81,8 +90,11 @@ class Database:
                 result = cursor.execute(sql, params)
                 conn.commit()
                 if insert:
-                    return cursor.lastrowid
+                    last_row_id = cursor.lastrowid
+                    cursor.close()
+                    return last_row_id
                 else:
+                    cursor.close()
                     return result
 
             else:
@@ -90,8 +102,7 @@ class Database:
         except Error as e:
             raise e
         finally:
-            if conn is not None and conn.is_connected():
-                cursor.close()
+            if conn is not None:
                 conn.close()
 
     def add_scope(self, scope_name):

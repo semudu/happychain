@@ -1,7 +1,6 @@
 import logging
 import threading
 from collections import OrderedDict
-from typing import OrderedDict
 
 import flask_excel as excel
 from flask import Blueprint, request, jsonify
@@ -11,7 +10,7 @@ from app.models.content import Content
 from app.services.database import Database
 from app.services.service import Service
 
-api = Blueprint('api', __name__, None)
+api = Blueprint('app', __name__, None)
 api.config = {}
 
 db = Database()
@@ -22,6 +21,7 @@ excel.init_excel(api)
 basic_auth = BasicAuth(api)
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+
 
 @api.record
 def record_params(setup_state):

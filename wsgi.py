@@ -1,3 +1,4 @@
-from run import start_app
+from happychain import app as application
 
-app = start_app()
+if __name__ == "__main__":
+    application.run()

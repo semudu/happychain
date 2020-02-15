@@ -1,0 +1,33 @@
+-i https://pypi.org/simple
+-e git+https://github.com/semudu/bip-api@764c0db763bc227b5cf0716467cd7f8d775da663#egg=bipwrapper
+base58==2.0.0
+certifi==2019.11.28
+chardet==3.0.4
+click==7.0
+dnspython==1.16.0
+ecdsa==0.15
+et-xmlfile==1.0.1
+flask-basicauth==0.2.0
+flask-excel==0.0.7
+flask==1.1.1
+idna==2.8
+itsdangerous==1.1.0
+jdcal==1.4.1
+jinja2==2.11.1
+lml==0.0.9
+markupsafe==1.1.1
+mysql-connector-python==8.0.19
+openpyxl==3.0.3
+protobuf==3.6.1
+pycron==3.0.0
+pyexcel-io==0.5.20
+pyexcel-webio==0.1.4
+pyexcel-xlsx==0.5.8
+pyexcel==0.5.15
+requests==2.22.0
+schedule==0.6.0
+six==1.14.0
+texttable==1.6.2
+unidecode==1.1.1
+urllib3==1.25.8
+werkzeug==1.0.0
