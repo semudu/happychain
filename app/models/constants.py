@@ -42,7 +42,7 @@ class Image:
 
 
 class Message:
-    HELP = "Puan sorgulamak için PUAN yaz gönder. \n\nArkadaşına puan göndermek için arkadaşının isminin ilk 3-4 harfini yaz, gelen listeden seçimini yap, puanı gönder.\n\nArkadaşlarının isimlerini liste halinde görmek için LISTE  yaz gönder."
+    HELP = "Puan sorgulamak için PUAN yaz gönder. \n\nArkadaşına puan göndermek için arkadaşının isminin ilk harflerini yaz, gelen listeden seçimini yap, puanı gönder."
     BALANCE = "IMS Bakiyen: %s IMS\n\nGönderdiğin: 👼 %s IMS \nSana Gelen: 🙏 %s IMS"
     LAST_SENT = "Gönderdiğin son %s mesaj:\n\n"
     LAST_RECEIVED = "Aldığın son %s mesaj:\n\n"

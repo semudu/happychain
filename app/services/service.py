@@ -36,18 +36,18 @@ class Service:
         self.bip_api.single.send_text_message(msisdn, Message.BALANCE % (balance, total_send, total_received))
 
     def __send_lastn_sent(self, msisdn, user_id, count):
-        text = Message.LAST_SENT % count
         result = self.db.get_lastn_sent(user_id, count)
+        self.bip_api.single.send_text_message(msisdn, Message.LAST_SENT % count)
         for row in result:
-            text += row["full_name"] + "\n" + row["text"] + "\n" + row["date"]
-        self.bip_api.single.send_text_message(msisdn, text)
+            text = row["text"] + "\n\n" + row["full_name"] + "\n" + row["date"]
+            self.bip_api.single.send_text_message(msisdn, text)
 
     def __send_lastn_received(self, msisdn, user_id, count):
-        text = Message.LAST_RECEIVED % count
         result = self.db.get_lastn_received(user_id, count)
+        self.bip_api.single.send_text_message(msisdn, Message.LAST_RECEIVED % count)
         for row in result:
-            text += row["full_name"] + "\n" + row["text"] + "\n" + row["date"]
-        self.bip_api.single.send_text_message(msisdn, text)
+            text = row["text"] + "\n\n" + row["full_name"] + "\n" + row["date"]
+            self.bip_api.single.send_text_message(msisdn, text)
 
     def __send_user_list(self, msisdn, user_id, start_with):
         balance = self.db.get_balance(user_id)
@@ -186,24 +186,26 @@ class Service:
         if msg.sender:
             user_id = self.db.get_user_id_by_msisdn(msg.sender)
             if user_id:
-                if msg.command == Command.HELP or msg.payload == Command.HELP:
-                    self.bip_api.single.send_text_message(msg.sender, Message.HELP)
-
-                elif msg.command == Command.MENU:
+                if msg.command == Command.MENU or msg.ctype == CType.BUZZ:
                     self.__send_menu__(msg.sender)
+
+                elif msg.command == Command.HELP or msg.payload == Command.HELP:
+                    self.bip_api.single.send_text_message(msg.sender, Message.HELP)
 
                 elif msg.command == Command.POINT or msg.payload == Command.POINT:
                     self.__send_balance__(msg.sender, user_id)
 
-                elif msg.command == Command.LAST_SENT or msg.payload == Command.LAST_SENT:
-                    self.__send_lastn_sent(msg.sender, user_id, msg.next_command())
+                elif msg.command == Command.LAST_SENT:
+                    self.__send_lastn_sent(msg.sender, user_id, msg.commands[1])
 
-                elif msg.command == Command.LAST_RECEIVED or msg.payload == Command.LAST_RECEIVED:
-                    self.__send_lastn_received(msg.sender, user_id, msg.next_command())
+                elif msg.payload == Command.LAST_SENT:
+                    self.__send_lastn_sent(msg.sender, user_id, msg.payloads[1])
 
-                elif msg.ctype == CType.BUZZ:
-                    # send menu to user
-                    self.__send_menu__(msg.sender)
+                elif msg.command == Command.LAST_RECEIVED:
+                    self.__send_lastn_received(msg.sender, user_id, msg.commands[1])
+
+                elif msg.payload == Command.LAST_RECEIVED:
+                    self.__send_lastn_received(msg.sender, user_id, msg.payloads[1])
 
                 elif msg.ctype == CType.POLL and msg.poll_id == Poll.SHORT_LIST:
                     # send reason list to user

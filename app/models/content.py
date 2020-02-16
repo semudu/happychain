@@ -1,7 +1,7 @@
 import json
 
-from .constants import Globals
 from app.services.utils import *
+from .constants import Globals
 
 
 class KeyValuePair:
@@ -25,6 +25,9 @@ class KeyValuePair:
     @value.setter
     def value(self, value):
         self.__value = value
+
+    def __repr__(self):
+        return "<KeyValuePair id:%s value:%s/>" % (self.id, self.value)
 
 
 class Content:
@@ -152,9 +155,11 @@ class Content:
     @postback.setter
     def postback(self, value):
         if value:
-            self.__postback = KeyValuePair(value.get("postbackid"), value.get("payload").lower())
+            self.__postback = KeyValuePair(value.get("postbackid"),
+                                           split_to_array(value.get("payload").lower(), Globals.DELIMITER) if value.get(
+                                               "payload") else [""])
         else:
-            self.__postback = KeyValuePair(None, None)
+            self.__postback = KeyValuePair(None, [None])
 
     @property
     def poll(self):
@@ -175,10 +180,14 @@ class Content:
 
     @property
     def command(self):
-        return self.commands[0]
+        return self.__commands[0]
 
     @property
     def payload(self):
+        return self.__postback.value[0]
+
+    @property
+    def payloads(self):
         return self.__postback.value
 
     @property
@@ -198,12 +207,11 @@ class Content:
         return self.__poll.id[2]
 
     @property
-    def next_command(self, index=1):
-        if len(self.__commands) > index:
-            return self.__commands[index]
-        return None
-
-    @property
     def toJSON(self):
         return json.dumps(self, default=json_default,
                           sort_keys=True, indent=4)
+
+    def __repr__(self):
+        return "<Content sender:%s type:%s msgid:%s sendtime:%s content:%s txnid:%s nickname:%s ctype:%s postback:%s poll:%s />" % (
+            self.sender, self.type, self.msgid, self.sendtime, self.content, self.txnid, self.nickname, self.ctype,
+            self.postback, self.poll)
