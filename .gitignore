@@ -5,4 +5,4 @@
 config.py
 run_local.py
 **/__pycache__/
-.Pipfile.lock
+Pipfile.lock
