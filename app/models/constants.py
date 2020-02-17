@@ -1,5 +1,5 @@
 class Globals:
-    LOAD_BALANCE_CRON = "* * * * MON"
+    LOAD_BALANCE_CRON = "* * * * 1"
     RESET_BALANCE_CRON = "* * 1 * *"
     LOAD_BALANCE_TIME = "08:05"
     RESET_BALANCE_TIME = "08:00"
