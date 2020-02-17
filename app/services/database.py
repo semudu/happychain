@@ -233,11 +233,11 @@ class Database:
         return result if result else 0
 
     def get_lastn_sent(self, user_id, count):
-        sql = "select concat(u.first_name, ' ', u.last_name) as full_name, (case when m.id = -1 then (select free_message ->> '$.content' from happychain.transaction where id = t.id) else m.text end) text, date_format(t.date, '%d %M, %W') date from transaction t, user u, message m where t.receiver_id = u.id and t.message_id = m.id and t.is_active = 1 and t.sender_id = %s order by t.date desc limit %s;"
+        sql = "select concat(u.first_name, ' ', u.last_name) as full_name, (case when m.id = -1 then (select free_message ->> '$.content' from happychain.transaction where id = t.id) else m.text end) text, date_format(t.date, '%d %M, %W') date from transaction t, user u, message m where t.receiver_id = u.id and t.message_id = m.id and t.is_active = 1 and t.sender_id = %s and (t.id != -1 or (t.id = -1 and t.free_message is not null )) order by t.date desc limit %s;"
         return self.__fetchall(sql, (user_id, count))
 
     def get_lastn_received(self, user_id, count):
-        sql = "select concat(u.first_name, ' ', u.last_name) as full_name, (case when m.id = -1 then (select free_message ->> '$.content' from happychain.transaction where id = t.id) else m.text end) text, date_format(t.date, '%d %M, %W') date from transaction t, user u, message m where t.sender_id = u.id and t.message_id = m.id and t.is_active = 1 and t.receiver_id = %s order by t.date desc limit %s;"
+        sql = "select concat(u.first_name, ' ', u.last_name) as full_name, (case when m.id = -1 then (select free_message ->> '$.content' from happychain.transaction where id = t.id) else m.text end) text, date_format(t.date, '%d %M, %W') date from transaction t, user u, message m where t.sender_id = u.id and t.message_id = m.id and t.is_active = 1 and t.receiver_id = %s and (t.id != -1 or (t.id = -1 and t.free_message is not null )) order by t.date desc limit %s;"
         return self.__fetchall(sql, (user_id, count))
 
     def get_message_list_by_target(self, target_user_id):
