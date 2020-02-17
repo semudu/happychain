@@ -22,7 +22,7 @@ def load_balance_job():
         if pycron.is_now(Globals.LOAD_BALANCE_CRON):
             db.load_balance_all(Globals.LOAD_BALANCE_AMOUNT)
             receivers = list(map(lambda msisdn: msisdn["msisdn"], db.get_all_msisdn_list()))
-            bip_api.multi(receivers, Message.LOAD_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
+            bip_api.multi.send_text_message(receivers, Message.LOAD_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
 
     except Exception as e:
         logging.error("An error occured in load balance job: " + str(e))
@@ -33,7 +33,7 @@ def reset_balance_job():
         if pycron.is_now(Globals.RESET_BALANCE_CRON):
             db.reset_balance_all(Globals.LOAD_BALANCE_AMOUNT)
             receivers = list(map(lambda msisdn: msisdn["msisdn"], db.get_all_msisdn_list()))
-            bip_api.multi(receivers, Message.RESET_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
+            bip_api.multi.send_text_message(receivers, Message.RESET_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
 
     except Exception as e:
         logging.error("An error occured in reset balance job: " + str(e))
