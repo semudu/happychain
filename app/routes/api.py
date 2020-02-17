@@ -1,4 +1,5 @@
 import logging
+import threading
 from collections import OrderedDict
 
 import flask_excel as excel
@@ -201,7 +202,10 @@ def bip_process():
     try:
         if request.is_json:
             content = Content(request.get_json())
-            service.process_bip_request(content)
+            t = threading.Thread(target=service.process_bip_request, args=(content,))
+            t.start()
+
+        # bip in retry etmemesi için response hızlı dönmeli
         return "", 200
 
     except Exception as e:
