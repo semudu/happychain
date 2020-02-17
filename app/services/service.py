@@ -182,8 +182,6 @@ class Service:
             "failed": failed
         }
 
-    @postfork
-    @thread
     def process_bip_request(self, msg):
         if msg.sender:
             user_id = self.db.get_user_id_by_msisdn(msg.sender)
