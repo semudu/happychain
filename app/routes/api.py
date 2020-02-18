@@ -1,4 +1,3 @@
-import threading
 from collections import OrderedDict
 
 import flask_excel as excel
@@ -198,11 +197,8 @@ def get_users():
 def bip_process():
     try:
         if request.is_json:
-            content = Content(request.get_json())
-            t = threading.Thread(target=service.process_bip_request, args=(content,))
-            t.start()
+            service.process_bip_request(Content(request.get_json()))
 
-        # bip in retry etmemesi için response hızlı dönmeli
         return "", 200
 
     except Exception as e:

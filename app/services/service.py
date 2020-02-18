@@ -1,3 +1,5 @@
+import threading
+
 from bipwrapper.api import API
 from bipwrapper.type import *
 from mysql.connector import Error
@@ -181,7 +183,7 @@ class Service:
             "failed": failed
         }
 
-    def process_bip_request(self, msg):
+    def __process_bip_request(self, msg):
         logger.debug("Request Object: %s" % msg)
         if msg.sender:
             user_id = self.db.get_user_id_by_msisdn(msg.sender)
@@ -224,3 +226,7 @@ class Service:
                         self.__send_free_message(msg.sender, free_message_transaction, msg.ctype, msg.content)
                     else:
                         self.__send_user_list(msg.sender, user_id, msg.command)
+
+    def process_bip_request(self, msg):
+        t = threading.Thread(target=self.__process_bip_request, args=(msg,))
+        t.start()
