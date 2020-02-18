@@ -19,7 +19,7 @@ bip_api = API(Settings.BIP_URL, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
 
 def load_balance_job():
     try:
-        if pycron.is_now(Globals.LOAD_BALANCE_CRON):
+        if pycron.is_now(Globals.LOAD_BALANCE_CRON) and not pycron.is_now(Globals.RESET_BALANCE_CRON):
             db.load_balance_all(Globals.LOAD_BALANCE_AMOUNT)
             receivers = list(map(lambda msisdn: msisdn["msisdn"], db.get_all_msisdn_list()))
             bip_api.multi.send_text_message(receivers, Message.LOAD_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
