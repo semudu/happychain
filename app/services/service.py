@@ -1,15 +1,14 @@
-import logging
-
 from bipwrapper.api import API
 from bipwrapper.type import *
 from mysql.connector import Error
 
-from app.models.constants import *
+from app.constants import *
+from app.log import get_logger
+from app.utils import *
 from settings import Settings
 from .database import Database
-from .utils import *
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logger = get_logger(__name__)
 
 
 class Service:
@@ -183,6 +182,7 @@ class Service:
         }
 
     def process_bip_request(self, msg):
+        logger.debug("Request Object: %s" % msg)
         if msg.sender:
             user_id = self.db.get_user_id_by_msisdn(msg.sender)
             if user_id:

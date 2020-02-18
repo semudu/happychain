@@ -6,7 +6,6 @@ from settings import Settings
 app = Flask(__name__)
 
 app.config.from_object(Settings)
-app.register_blueprint(api, url_prefix='/api')
+app.logger.setLevel(Settings.LOG_LEVEL)
 
-# if __name__ == "__main__":
-#    app.run()
+app.register_blueprint(api, url_prefix='/api')

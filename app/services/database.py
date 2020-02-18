@@ -4,9 +4,9 @@ import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
 
-from app.models.constants import Globals, Role
+from app.constants import Globals, Role
+from app.utils import hash_password, convert_to_date
 from settings import Settings
-from .utils import hash_password, convert_to_date
 
 
 class Database:

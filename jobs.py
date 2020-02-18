@@ -6,9 +6,9 @@ import pycron
 import schedule
 from bipwrapper.api import API
 
-from app.models.constants import Globals, Message
+from app.constants import Globals, Message
 from app.services.database import Database
-from app.services.utils import get_name_with_own_suffix
+from app.utils import get_name_with_own_suffix
 from settings import Settings
 
 logging.basicConfig(format='%(levelname)s-%(thread)d:%(message)s', level=logging.DEBUG)

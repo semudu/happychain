@@ -1,4 +1,3 @@
-import logging
 import threading
 from collections import OrderedDict
 
@@ -6,7 +5,7 @@ import flask_excel as excel
 from flask import Blueprint, request, jsonify
 from flask_basicauth import BasicAuth
 
-from app.models.content import Content
+from app.content import Content
 from app.services.database import Database
 from app.services.service import Service
 
@@ -19,8 +18,6 @@ service = Service()
 excel.init_excel(api)
 
 basic_auth = BasicAuth(api)
-
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 
 @api.record

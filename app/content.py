@@ -1,7 +1,7 @@
 import json
 
-from app.services.utils import *
 from .constants import Globals
+from .utils import *
 
 
 class KeyValuePair:
