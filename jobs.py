@@ -1,5 +1,4 @@
 import json
-import logging
 import time
 
 import pycron
@@ -7,11 +6,12 @@ import schedule
 from bipwrapper.api import API
 
 from app.constants import Globals, Message
+from app.log import get_logger
 from app.services.database import Database
 from app.utils import get_name_with_own_suffix
 from settings import Settings
 
-logging.basicConfig(format='%(levelname)s-%(thread)d:%(message)s', level=logging.DEBUG)
+logger = get_logger(__name__)
 
 db = Database()
 bip_api = API(Settings.BIP_URL, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
@@ -25,7 +25,7 @@ def load_balance_job():
             bip_api.multi.send_text_message(receivers, Message.LOAD_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
 
     except Exception as e:
-        logging.error("An error occured in load balance job: " + str(e))
+        logger.error("An error occured in load balance job: " + str(e))
 
 
 def reset_balance_job():
@@ -36,17 +36,17 @@ def reset_balance_job():
             bip_api.multi.send_text_message(receivers, Message.RESET_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
 
     except Exception as e:
-        logging.error("An error occured in reset balance job: " + str(e))
+        logger.error("An error occured in reset balance job: " + str(e))
 
 
 def special_dates_job():
     try:
         special_date_messages = db.get_special_dates()
         if len(special_date_messages) > 0:
-            logging.debug("special dates")
+            logger.debug("special dates")
 
     except Exception as e:
-        logging.error("An error occured in special date job: " + str(e))
+        logger.error("An error occured in special date job: " + str(e))
 
 
 def birthday_job():
@@ -74,14 +74,14 @@ def birthday_job():
                         db.load_balance_user(user["id"], Globals.LOAD_BALANCE_AMOUNT)
 
     except Exception as e:
-        logging.error("An error occured in birthday job: " + str(e))
+        logger.error("An error occured in birthday job: " + str(e))
 
 
 def reminder_job():
     try:
-        logging.debug("send reminder to deactive users")
+        logger.debug("send reminder to deactive users")
     except Exception as e:
-        logging.error("An error occured in reminder job: " + str(e))
+        logger.error("An error occured in reminder job: " + str(e))
 
 
 if __name__ == "__main__":
@@ -95,6 +95,6 @@ if __name__ == "__main__":
             schedule.run_pending()
             time.sleep(10)
     except Exception as e:
-        logging.error("send_periodically_message: " + str(e))
+        logger.error("send_periodically_message: " + str(e))
     finally:
         print("Schedule thread finished.")
