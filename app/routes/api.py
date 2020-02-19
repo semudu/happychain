@@ -30,15 +30,14 @@ def get():
     return "Pitika!!!"
 
 
-@api.route("/transactions/team/<team_id>")
-def get_team_transactions(team_id):
-    return "..."
-
-
-@api.route("/transactions/user/<user_id>")
+@api.route("/transaction/received/team/<team_id>")
 @basic_auth.required
-def get_user_transactions(team_id):
-    return "..."
+def get_team_transactions(team_id):
+    try:
+        return jsonify({"result": db.get_received_messages_by_team(team_id)})
+    except Exception as e:
+        print("Transactions retrieve exception: %s" % str(e))
+        return "An error occurred", 500
 
 
 @api.route("/scope", methods=["POST"])

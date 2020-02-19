@@ -1,14 +1,14 @@
 import json
-import time
 
 import pycron
 import schedule
-from bipwrapper.api import API
+import time
 
 from app.constants import Globals, Message
 from app.log import get_logger
 from app.services.database import Database
 from app.utils import get_name_with_own_suffix
+from bipwrapper.api import API
 from settings import Settings
 
 logger = get_logger(__name__)
@@ -16,9 +16,6 @@ logger = get_logger(__name__)
 db = Database()
 bip_api = API(Settings.BIP_URL, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
 
-
-def test():
-    bip_api.multi.send_text_message(["5332108311"],"test")
 
 def load_balance_job():
     try:
@@ -68,9 +65,12 @@ def birthday_job():
                             if target_user["id"] != user["id"]:
                                 receivers.append(target_user["msisdn"])
                         if len(receivers) > 0:
-                            bip_api.multi.send_text_message(receivers, message_json["message"] % get_name_with_own_suffix(user["full_name"]))
+                            bip_api.multi.send_text_message(receivers,
+                                                            message_json["message"] % get_name_with_own_suffix(
+                                                                user["full_name"]))
                         bip_api.single.send_text_message(user["msisdn"],
-                                                         Message.BIRTHDAY_MESSAGE % (user["first_name"],Globals.LOAD_BALANCE_AMOUNT))
+                                                         Message.BIRTHDAY_MESSAGE % (
+                                                             user["first_name"], Globals.LOAD_BALANCE_AMOUNT))
                         db.load_balance_user(user["id"], Globals.LOAD_BALANCE_AMOUNT)
 
     except Exception as e:
