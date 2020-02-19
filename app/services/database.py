@@ -363,5 +363,5 @@ class Database:
 
     def get_received_messages_by_team(self, team_id):
         return self.__fetchall(
-            "select u_s.first_name from_first_name, u_s.last_name from_last_name, tm.name from_team, u_r.first_name to_first_name, u_r.last_name to_last_name, (case when t.message_id = -1 then t.free_message ->> '$.content' else m.text end) message from transaction t, team tm, user u_r, user u_s, message m where u_s.id = t.sender_id and u_s.team_id = tm.id and t.receiver_id = u_r.id and m.id = t.message_id and u_r.team_id = %",
+            "select u_s.first_name from_first_name, u_s.last_name from_last_name, tm.name from_team, u_r.first_name to_first_name, u_r.last_name to_last_name, (case when t.message_id = -1 then t.free_message ->> '$.content' else m.text end) message from transaction t, team tm, user u_r, user u_s, message m where u_s.id = t.sender_id and u_s.team_id = tm.id and t.receiver_id = u_r.id and m.id = t.message_id and u_r.team_id = %s",
             (team_id,))
