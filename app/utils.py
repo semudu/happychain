@@ -94,7 +94,7 @@ def get_name_with_suffix(name) -> str:
         else:
             return "%s'ye" % name
     else:
-        if vowels.find(str(name[-2:1])) < 9:
+        if vowels.find(str(name[-2:-1])) < 9:
             return "%s'a" % name
         else:
             return "%s'e" % name
@@ -111,7 +111,7 @@ def get_name_with_own_suffix(name) -> str:
         else:
             return "%s' nin" % name
     else:
-        if vowels.find(str(name[-2:1])) < 9:
+        if vowels.find(str(name[-2:-1])) < 9:
             return "%s' ın" % name
         else:
             return "%s' in" % name

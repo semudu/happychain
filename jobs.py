@@ -17,6 +17,9 @@ db = Database()
 bip_api = API(Settings.BIP_URL, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
 
 
+def test():
+    bip_api.multi.send_text_message(["5332108311"],"test")
+
 def load_balance_job():
     try:
         if pycron.is_now(Globals.LOAD_BALANCE_CRON) and not pycron.is_now(Globals.RESET_BALANCE_CRON):
@@ -65,12 +68,11 @@ def birthday_job():
                             if target_user["id"] != user["id"]:
                                 receivers.append(target_user["msisdn"])
                         if len(receivers) > 0:
-                            bip_api.multi.send_text_message(receivers, message_json[
-                                "message"] % get_name_with_own_suffix(
-                                user["full_name"]))
+                            msg =  message_json["message"] % get_name_with_own_suffix(user["full_name"])
+                            for receiver in receivers:
+                                bip_api.single.send_text_message(receiver, msg)
                         bip_api.single.send_text_message(user["msisdn"],
-                                                         Message.BIRTHDAY_MESSAGE % user["first_name"],
-                                                         Globals.LOAD_BALANCE_AMOUNT)
+                                                         Message.BIRTHDAY_MESSAGE % (user["first_name"],Globals.LOAD_BALANCE_AMOUNT))
                         db.load_balance_user(user["id"], Globals.LOAD_BALANCE_AMOUNT)
 
     except Exception as e:
