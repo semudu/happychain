@@ -1,5 +1,5 @@
 -i https://pypi.org/simple
--e git+https://github.com/semudu/bip-api@764c0db763bc227b5cf0716467cd7f8d775da663#egg=bipwrapper
+-e git+https://github.com/semudu/bip-api@d71bb6693676d0597df3005f0c445ff1ec622186#egg=bipwrapper
 base58==2.0.0
 certifi==2019.11.28
 chardet==3.0.4

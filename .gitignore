@@ -2,7 +2,9 @@
 .vscode/
 .idea/
 .gitsecret/keys/random_seed
+.venv
 config.py
+settings.py
 run_local.py
 **/__pycache__/
 Pipfile.lock

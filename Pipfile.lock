@@ -27,7 +27,7 @@
         "bipwrapper": {
             "editable": true,
             "git": "https://github.com/semudu/bip-api",
-            "ref": "764c0db763bc227b5cf0716467cd7f8d775da663"
+            "ref": "d71bb6693676d0597df3005f0c445ff1ec622186"
         },
         "certifi": {
             "hashes": [
