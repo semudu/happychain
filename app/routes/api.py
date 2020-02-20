@@ -30,11 +30,11 @@ def get():
     return "Pitika!!!"
 
 
-@api.route("/transaction/received/team/<team_id>")
+@api.route("/transaction/received/team/<team_id>/limit/<limit>")
 @basic_auth.required
-def get_team_transactions(team_id):
+def get_team_transactions(team_id, limit):
     try:
-        return jsonify({"result": db.get_received_messages_by_team(team_id)})
+        return jsonify({"result": db.get_received_messages_by_team(team_id, limit)})
     except Exception as e:
         print("Transactions retrieve exception: %s" % str(e))
         return "An error occurred", 500
