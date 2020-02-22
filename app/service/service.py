@@ -3,6 +3,7 @@ import threading
 from bipwrapper import BipWrapper
 from bipwrapper.type.button_type import ButtonType
 from bipwrapper.type.poll_type import PollType
+from bipwrapper.type.ctype import CType
 
 from app.commons.bip_request import BipRequest
 from app.commons.constants.globals import *
@@ -11,8 +12,8 @@ from app.commons.constants.message import Message
 from mysql.connector import Error
 from app.commons.log import get_logger
 from app.commons.utils import *
-from settings import Settings
 from .database import Database
+from config import APP, BIP
 
 logger = get_logger(__name__)
 
@@ -20,8 +21,8 @@ logger = get_logger(__name__)
 class Service:
     def __init__(self):
         self.db = Database()
-        self.transfer_secret = Settings.TRANSFER_SECRET
-        self.bip_api = BipWrapper(Settings.BIP_ENV, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
+        self.transfer_secret = APP.TRANSFER_SECRET
+        self.bip_api = BipWrapper(BIP.ENVIRONMENT, BIP.USERNAME, BIP.PASSWORD)
 
     def __send_menu(self, msisdn, user_id):
         user = self.db.get_user_by_id(user_id)
@@ -129,7 +130,7 @@ class Service:
         if not message.strip():
             self.bip_api.single.send_text_message(msisdn, "Birşeyler yazabilirsin bence 😄")
         else:
-            if msg_type == 'T' or msg_type == 't':
+            if msg_type == CType.TEXT:
                 target_user = self.db.get_user_by_id(last_transaction["receiver_id"])
                 balance = self.db.get_balance_by_user_id(last_transaction["sender_id"])
                 self.db.update_free_message(last_transaction, msg_type, message)

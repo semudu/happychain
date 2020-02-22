@@ -6,7 +6,7 @@ from mysql.connector import pooling
 
 from app.commons.utils import hash_password, convert_to_date
 from app.commons.constants.globals import *
-from settings import Settings
+from config import DB
 
 from app.commons.constants.queries import SQL
 
@@ -14,11 +14,11 @@ from app.commons.constants.queries import SQL
 class Database:
     def __init__(self):
         try:
-            self.connection_pool = mysql.connector.pooling.MySQLConnectionPool(host=Settings.DB_HOST,
-                                                                               port=Settings.DB_PORT,
-                                                                               database=Settings.DB_NAME,
-                                                                               user=Settings.DB_USER,
-                                                                               password=Settings.DB_PASSWD,
+            self.connection_pool = mysql.connector.pooling.MySQLConnectionPool(host=DB.HOST,
+                                                                               port=DB.PORT,
+                                                                               database=DB.NAME,
+                                                                               user=DB.USER,
+                                                                               password=DB.PASSWD,
                                                                                charset="utf8",
                                                                                pool_size=5,
                                                                                pool_reset_session=True)
