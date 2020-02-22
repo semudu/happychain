@@ -17,7 +17,8 @@ unidecode = "*"
 requests = "*"
 schedule = "*"
 pycron = "*"
-bipwrapper = {editable = true,git = "https://github.com/semudu/bip-api"}
+bipwrapper = "*"
+pyyml = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"

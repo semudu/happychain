@@ -4,9 +4,11 @@ import flask_excel as excel
 from flask import Blueprint, request, jsonify
 from flask_basicauth import BasicAuth
 
-from app.content import Content
-from app.services.database import Database
-from app.services.service import Service
+from app.service.database import Database
+from app.service.service import Service
+from app.commons.log import get_logger
+
+logger = get_logger(__name__)
 
 api = Blueprint('api', __name__, None)
 api.config = {}
@@ -196,7 +198,7 @@ def get_users():
 def bip_process():
     try:
         if request.is_json:
-            service.process_bip_request(Content(request.get_json()))
+            service.process_bip_request(request.get_json())
 
         return "", 200
 
