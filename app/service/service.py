@@ -42,14 +42,14 @@ class Service:
         total_received = self.db.get_total_received_transaction(user_id)
         self.bip_api.single.send_text_message(msisdn, Message.BALANCE % (balance, total_send, total_received))
 
-    def __send_lastn_sent(self, msisdn, user_id, count):
+    def __send_last_n_sent(self, msisdn, user_id, count):
         result = self.db.get_last_n_sent(user_id, count)
         self.bip_api.single.send_text_message(msisdn, Message.LAST_SENT % count)
         for row in result:
             text = row["text"] + "\n\n" + row["full_name"] + "\n" + row["date"]
             self.bip_api.single.send_text_message(msisdn, text)
 
-    def __send_lastn_received(self, msisdn, user_id, count):
+    def __send_last_n_received(self, msisdn, user_id, count):
         result = self.db.get_last_n_received(user_id, count)
         self.bip_api.single.send_text_message(msisdn, Message.LAST_RECEIVED % count)
         for row in result:
@@ -208,10 +208,10 @@ class Service:
                     self.__send_balance(request.sender, user_id)
 
                 elif request.command == Command.LAST_SENT:
-                    self.__send_lastn_sent(request.sender, user_id, request.extra_param())
+                    self.__send_last_n_sent(request.sender, user_id, request.extra_param())
 
                 elif request.command == Command.LAST_RECEIVED:
-                    self.__send_lastn_received(request.sender, user_id, request.extra_param())
+                    self.__send_last_n_received(request.sender, user_id, request.extra_param())
 
                 elif request.command == Command.SHORT_LIST:
                     # send reason list to user
