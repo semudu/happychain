@@ -4,17 +4,19 @@ import pycron
 import schedule
 import time
 
-from app.constants import Globals, Message
-from app.log import get_logger
-from app.services.database import Database
-from app.utils import get_name_with_own_suffix
-from bipwrapper.api import API
+from bipwrapper import BipWrapper
+
+from app.commons.log import get_logger
+from app.service.database import Database
+from app.commons.utils import get_name_with_own_suffix
+from app.commons.constants.globals import Globals
+from app.commons.constants.message import Message
 from settings import Settings
 
 logger = get_logger(__name__)
 
 db = Database()
-bip_api = API(Settings.BIP_URL, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
+bip_api = BipWrapper(Settings.BIP_ENV, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
 
 
 def load_balance_job():
@@ -54,10 +56,10 @@ def birthday_job():
         users = db.get_birthday_users()
         if len(users) > 0:
             for user in users:
-                scope_id = db.get_user_scope_id(user["id"])
+                scope_id = db.get_scope_id_by_user_id(user["id"])
                 message = db.get_out_message(scope_id, 'D')
                 if len(message) > 0:
-                    target_users = db.get_users_by_scope(user["id"])
+                    target_users = db.get_scope_users_by_user_id_and_like_name(user["id"])
                     if len(target_users) > 0:
                         message_json = json.loads(message[0]["text"])
                         receivers = []

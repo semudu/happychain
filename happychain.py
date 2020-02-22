@@ -1,6 +1,6 @@
 from flask import Flask
 
-from app.routes.api import api
+from app.route.api import api
 from settings import Settings
 
 app = Flask(__name__)
