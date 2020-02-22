@@ -96,6 +96,7 @@ class Channel:
 
         self.bip_api.single.send_quickreply_message(request.sender, Command.MENU, menu)
 
+
     def send_balance(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
         balance = self.db.get_balance_by_user_id(user_id)
