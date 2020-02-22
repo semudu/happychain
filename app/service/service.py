@@ -1,10 +1,10 @@
 import threading
 
 from app.commons.constants.globals import *
-from app.commons.constants.task import Task
 from mysql.connector import Error
 from app.commons.log import get_logger
 from .database import Database
+from .channel import Channel
 
 logger = get_logger(__name__)
 
@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 class Service:
     def __init__(self):
         self.db = Database()
-        self.task = Task()
+        self.bip_channel = Channel()
 
     def import_user_array(self, user_array):
         teams = {}
@@ -43,5 +43,5 @@ class Service:
         }
 
     def process_command(self, request_json):
-        t = threading.Thread(target=self.task.run, args=(request_json,))
+        t = threading.Thread(target=self.bip_channel.run_command, args=(request_json,))
         t.start()

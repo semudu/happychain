@@ -1,8 +1,11 @@
+from collections import defaultdict
+
 from bipwrapper import BipWrapper
 from bipwrapper.type.button_type import ButtonType
 from bipwrapper.type.poll_type import PollType
 from bipwrapper.type.ctype import CType
 
+from app.commons.bip_request import BipRequest
 from app.commons.constants.globals import *
 from app.commons.constants.command import Command
 from app.commons.constants.message import Message
@@ -19,6 +22,20 @@ class Channel:
         self.db = Database()
         self.transfer_secret = APP.TRANSFER_SECRET
         self.bip_api = BipWrapper(BIP.ENVIRONMENT, BIP.USERNAME, BIP.PASSWORD)
+        self.map = {
+            Command.MENU: self.send_menu,
+            Command.HELP: self.send_help_message,
+            Command.POINT: self.send_balance,
+            Command.LAST_SENT: self.send_last_n_sent,
+            Command.LAST_RECEIVED: self.send_last_n_received,
+            Command.MESSAGE_LIST: self.send_message_list,
+            Command.FINISH_TRANSACTION: self.send_message
+        }
+
+    def run_command(self, request_json):
+        request = BipRequest(request_json)
+        task = defaultdict(lambda: self.non_command, self.map)
+        task[request.command](request)
 
     def __finish_transaction_message(self, msisdn, user_id, target_user, message, balance):
         self.bip_api.single.send_text_message(msisdn, Message.SENT_MESSAGE
@@ -149,7 +166,7 @@ class Channel:
             self.__send_free_message(request.sender, free_message_transaction, request.ctype,
                                      request.context)
         else:
-            self.send_user_list(request.sender, user_id, request.command)
+            self.send_user_list(request)
 
     def send_message(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
