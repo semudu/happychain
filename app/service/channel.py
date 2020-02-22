@@ -29,7 +29,13 @@ class Channel:
             Command.LAST_SENT: self.send_last_n_sent,
             Command.LAST_RECEIVED: self.send_last_n_received,
             Command.MESSAGE_LIST: self.send_message_list,
-            Command.FINISH_TRANSACTION: self.send_message
+            Command.FINISH_TRANSACTION: self.send_message,
+            Command.TRANSACTION_COUNT: self.send_transaction_count,
+            Command.TOP_TEN: self.send_top_ten,
+            Command.SEND_MESSAGE_ALL: self.send_message_all,
+            Command.GET_TRANSACTION_REPORT: self.send_transaction_report,
+            Command.ADD_USER: self.add_user,
+            Command.REMOVE_USER: self.remove_user
         }
 
     def run_command(self, request_json):
@@ -74,15 +80,22 @@ class Channel:
 
     def send_menu(self, request):
         user = self.db.get_user_by_msisdn(request.sender)
-        if user["role"] == Role.SCOPE_ADMIN:
-            pass
+        if user["role"] in (Role.SCOPE_ADMIN, Role.SUPER_ADMIN):
+            menu = [
+                (Command.TRANSACTION_COUNT, "Gönderim Sayısı", ButtonType.POST_BACK),
+                (Command.TOP_TEN, "İlk 10", ButtonType.POST_BACK),
+                (Command.SEND_MESSAGE_ALL, "Toplu Mesaj", ButtonType.POST_BACK)
+            ]
         else:
-            self.bip_api.single.send_quickreply_message(request.sender, Command.MENU, [
+            menu = [
                 (Command.POINT, "💰 IMS Bakiyem", ButtonType.POST_BACK),
                 (Command.LAST_SENT + Globals.DELIMITER + "5", "➡️ Son Yolladıklarım", ButtonType.POST_BACK),
                 (Command.LAST_RECEIVED + Globals.DELIMITER + "5", "⬅️ Son gelenler", ButtonType.POST_BACK),
                 (Command.HELP, "❓ Yardım", ButtonType.POST_BACK)
-            ])
+            ]
+
+        self.bip_api.single.send_quickreply_message(request.sender, Command.MENU, menu)
+
 
     def send_balance(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
@@ -203,3 +216,34 @@ class Channel:
 
     def send_help_message(self, request):
         self.bip_api.single.send_text_message(request.sender, Message.HELP)
+
+    def send_transaction_count(self, request):
+        user_id = self.db.get_user_id_by_msisdn(request.sender)
+        scope_id = self.db.get_scope_id_by_user_id(user_id)
+        count = self.db.get_transaction_count_by_scope(scope_id)
+        self.bip_api.single.send_text_message(request.sender, count)
+
+    def send_top_ten(self, request):
+        user_id = self.db.get_user_id_by_msisdn(request.sender)
+        scope_id = self.db.get_scope_id_by_user_id(user_id)
+        users = self.db.get_top_ten_user_by_scope(scope_id)
+        msg = "%s\n\nToplam Yolladığı: %s\nToplam Aldığı: %s\nGenel Toplam: %s"
+        for user in users:
+            self.bip_api.single.send_text_message(request.sender, msg % (
+                user["full_name"], user["total_sent"], user["total_received"], user["total"]))
+
+    def send_message_all(self, request):
+        # TODO
+        pass
+
+    def send_transaction_report(self, request):
+        # TODO
+        pass
+
+    def add_user(self, request):
+        # TODO
+        pass
+
+    def remove_user(self, request):
+        # TODO
+        pass

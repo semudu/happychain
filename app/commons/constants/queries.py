@@ -23,6 +23,7 @@ class SQL:
     GET_USERS_MSISDN_LIST = "select msisdn from user;"
     GET_BIRTHDAY_USERS = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where dayofmonth(date_of_birth) = dayofmonth(curdate()) and month(date_of_birth) = month(curdate());"
     GET_SCOPE_USERS_BY_USER_ID_AND_LIKE_NAME = "select u.*, concat(u.first_name, ' ', u.last_name) as full_name from user u where u.id != %s and u.team_id in (select id from team where scope_id = (select s.id from scope s, team t, user u where u.team_id = t.id and t.scope_id = s.id and u.id = %s)) and first_name like %s;"
+    GET_TOP_TEN_USER_BY_SCOPE = "select *, (t.total_sent * %s + t.total_received * %s ) total from ( select concat(u.first_name, ' ', u.last_name) full_name, (select count(1) from transaction where sender_id = u.id) total_sent, (select count(1) from transaction where receiver_id = u.id) total_received from user u where team_id in (select id from team where scope_id = %s)) t order by total desc limit 10;"
 
     # ----------------- WALLET ----------------- #
     ADD_WALLET = "insert into wallet (user_id, balance) values (%s,%s);"
@@ -45,6 +46,7 @@ class SQL:
     GET_USER_LAST_TRANSACTION_BY_EMPTY_MESSAGE_TODAY = "select * from transaction where sender_id = %s and is_active = 1 and message_id=-1 and free_message is null and date(date) = date(curdate()) order by id desc limit 1;"
     UPDATE_FREE_MESSAGE = "update transaction set free_message = %s where id = %s;"
     ARCHIVE_ACTIVE_TRANSACTIONS = "insert into transaction_archive (date, archive_date, sender_id, receiver_id, message_id, free_text, amount) select date, curdate(), sender_id, receiver_id, message_id, free_text, amount from transaction where is_active = 1;"
+    GET_TRANSACTION_COUNT_BY_SCOPE = "select count(*) from transaction t where t.is_active = 1 and sender_id in ( select u.id from user u, team t where u.team_id = t.id and t.scope_id = %s)"
     TRUNCATE_TRANSACTIONS = "truncate table transaction;"
 
     # --------------- MESSAGE --------------- #

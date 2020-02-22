@@ -304,3 +304,12 @@ class Database:
 
     def get_received_messages_by_team(self, team_id, limit):
         return self.__fetchall(SQL.GET_LAST_N_RECEIVED_MESSAGES_BY_TEAM, (team_id, limit))
+
+    def get_transaction_count_by_scope(self, scope_id):
+        count = self.__fetchone(SQL.GET_TRANSACTION_COUNT_BY_SCOPE, (scope_id,))
+        if count is not None:
+            return count
+        return 0
+
+    def get_top_ten_user_by_scope(self, scope_id):
+        return self.__fetchall(SQL.GET_TOP_TEN_USER_BY_SCOPE, (Globals.EARN_AMOUNT, Globals.SEND_AMOUNT, scope_id))
