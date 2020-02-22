@@ -1,10 +1,9 @@
 class Command:
-    FREE = "__free"
     HELP = "__help"
     MENU = "__menu"
     POINT = "__point"
     LAST_SENT = "__last_sent"
     LAST_RECEIVED = "__last_received"
-    SHORT_LIST = "__short_list"
     MESSAGE_LIST = "__message_list"
+    FINISH_TRANSACTION = "__finish_transaction"
     QUICK_REPLY = "__quick_reply"

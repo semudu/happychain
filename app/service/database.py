@@ -175,6 +175,12 @@ class Database:
             return result[0]
         return None
 
+    def get_user_by_msisdn(self, msisdn):
+        result = self.__fetchall(SQL.GET_USER_BY_MSISDN, (msisdn,))
+        if len(result) > 0:
+            return result[0]
+        return None
+
     def get_users(self, start_with=""):
         return self.__fetchall(SQL.GET_USERS_LIKE_NAME, (start_with + "%",))
 
