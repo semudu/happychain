@@ -198,8 +198,7 @@ def get_users():
 def bip_process():
     try:
         if request.is_json:
-            service.process_bip_request(request.get_json())
-
+            service.process_command(request.get_json())
         return "", 200
 
     except Exception as e:

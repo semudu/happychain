@@ -16,10 +16,11 @@ class SQL:
     # ------------------ USER ------------------ #
     ADD_USER = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id, role) values (%s,upper(%s),upper(%s),%s,%s,%s,%s,%s);"
     GET_USER_BY_ID = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where id = %s;"
+    GET_USER_BY_MSISDN = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where msisdn = %s;"
+    GET_USER_ID_BY_MSISDN = "select id from user where msisdn = %s;"
     GET_USERS_LIKE_NAME = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where first_name like %s;"
     DELETE_USER = "update user set active = 0 where id = %s;"
     GET_USERS_MSISDN_LIST = "select msisdn from user;"
-    GET_USER_ID_BY_MSISDN = "select id from user where msisdn = %s;"
     GET_BIRTHDAY_USERS = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where dayofmonth(date_of_birth) = dayofmonth(curdate()) and month(date_of_birth) = month(curdate());"
     GET_SCOPE_USERS_BY_USER_ID_AND_LIKE_NAME = "select u.*, concat(u.first_name, ' ', u.last_name) as full_name from user u where u.id != %s and u.team_id in (select id from team where scope_id = (select s.id from scope s, team t, user u where u.team_id = t.id and t.scope_id = s.id and u.id = %s)) and first_name like %s;"
 
