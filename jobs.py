@@ -11,12 +11,12 @@ from app.service.database import Database
 from app.commons.utils import get_name_with_own_suffix
 from app.commons.constants.globals import Globals
 from app.commons.constants.message import Message
-from settings import Settings
+from config import BIP
 
 logger = get_logger(__name__)
 
 db = Database()
-bip_api = BipWrapper(Settings.BIP_ENV, Settings.BIP_USERNAME, Settings.BIP_PASSWORD)
+bip_api = BipWrapper(BIP.ENVIRONMENT, BIP.USERNAME, BIP.PASSWORD)
 
 
 def load_balance_job():
