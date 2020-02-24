@@ -20,7 +20,6 @@ logger = get_logger(__name__)
 class Channel:
     def __init__(self):
         self.db = Database()
-        self.transfer_secret = APP.TRANSFER_SECRET
         self.bip_api = BipWrapper(BIP.ENVIRONMENT, BIP.USERNAME, BIP.PASSWORD)
         self.map = {
             Command.MENU: self.send_menu,
@@ -80,8 +79,9 @@ class Channel:
 
     def send_menu(self, request):
         user = self.db.get_user_by_msisdn(request.sender)
-        if user["role"] in [Role.SCOPE_ADMIN, Role.SUPER_ADMIN]:
+        if user["role"] in [Role.SCOPE_ADMIN, Role.SUPER_ADMIN] and request.ctype == CType.BUZZ:
             menu = [
+                (Command.MENU, "Menü", ButtonType.POST_BACK),
                 (Command.TRANSACTION_COUNT, "Gönderim Sayısı", ButtonType.POST_BACK),
                 (Command.TOP_TEN, "İlk 10", ButtonType.POST_BACK)
             ]
@@ -179,7 +179,7 @@ class Channel:
                     "%s%s%s%s%s%s%s" % (
                         Command.FINISH_TRANSACTION, Globals.DELIMITER, str(target_user_id), Globals.DELIMITER,
                         str(user_id),
-                        self.transfer_secret, str(target_user_id)),
+                        APP.TRANSFER_SECRET, str(target_user_id)),
                     Message.REASON_LIST_TITLE % (
                         get_name_with_suffix(target_user["first_name"]), Globals.SEND_AMOUNT),
                     Message.REASON_LIST_DESC,
@@ -207,7 +207,7 @@ class Channel:
 
     def send_message(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
-        if request.extra_param(2) == "%s%s%s" % (user_id, self.transfer_secret, request.extra_param()):
+        if request.extra_param(2) == "%s%s%s" % (user_id, APP.TRANSFER_SECRET, request.extra_param()):
             target_user_id = request.extra_param()
             message_id = request.value()
             balance = self.db.get_balance_by_user_id(user_id)
