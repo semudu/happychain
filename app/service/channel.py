@@ -96,7 +96,6 @@ class Channel:
 
         self.bip_api.single.send_quickreply_message(request.sender, Command.MENU, menu)
 
-
     def send_balance(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
         balance = self.db.get_balance_by_user_id(user_id)
@@ -115,9 +114,10 @@ class Channel:
             user_list = self.db.get_scope_users_by_user_id_and_like_name(user_id, start_with, offset, 7)
 
         if len(user_list) > 6:
-            user_tuple = get_key_value_tuple(user_list[:6], "id", "full_name")
+            user_tuple = get_key_value_tuple(user_list[:5], "id", "full_name")
             user_tuple.append((-1, "Diğer"))
-            poll_id = "%s%s%s%s%s" % (Command.MESSAGE_LIST, Globals.DELIMITER, start_with, Globals.DELIMITER, offset)
+            poll_id = "%s%s%s%s%s" % (
+                Command.MESSAGE_LIST, Globals.DELIMITER, start_with, Globals.DELIMITER, offset + 5)
         else:
             user_tuple = get_key_value_tuple(user_list, "id", "full_name")
             poll_id = Command.MESSAGE_LIST
@@ -167,10 +167,10 @@ class Channel:
 
     def send_message_list(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
-        if request.extra() is not None:
-            self.__send_multi_user_list(request.sender, user_id, request.extra(), request.extra(2))
+        target_user_id = request.value()
+        if target_user_id == -1:
+            self.__send_multi_user_list(request.sender, user_id, request.extra_param(), request.extra_param(2))
         else:
-            target_user_id = request.value()
             message_list = self.db.get_message_list_by_user_id(target_user_id)
             if len(message_list) > 0:
                 message_tuple = get_key_value_tuple(message_list, "id", "text")
