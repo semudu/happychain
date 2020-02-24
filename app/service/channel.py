@@ -194,12 +194,12 @@ class Channel:
         free_message_transaction = self.db.check_free_message(user["id"])
         if free_message_transaction:
             self.__send_free_message(request.sender, free_message_transaction, request.ctype,
-                                     request.context)
+                                     request.content)
         else:
             if user["role"] in (Role.SCOPE_ADMIN, Role.SUPER_ADMIN):
                 out_message = self.db.check_empty_out_message(user["id"])
                 if out_message:
-                    self.send_message_all(out_message, request.ctype, request.context)
+                    self.send_message_all(out_message, request.ctype, request.content)
                 else:
                     self.send_user_list(request)
             else:
