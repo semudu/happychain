@@ -15,7 +15,7 @@ class BipRequest(Request):
         self.__values = None
 
         if self.ctype == CType.TEXT:
-            ctx_arr = split_to_array(self.context, Globals.DELIMITER)
+            ctx_arr = split_to_array(self.content, Globals.DELIMITER)
             self.__command = ctx_arr[0]
             self.__extras = ctx_arr[1:]
         elif self.ctype == CType.POLL:
