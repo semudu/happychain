@@ -7,7 +7,6 @@ import re
 
 import base58
 import ecdsa
-import unidecode
 from ecdsa import SigningKey, VerifyingKey
 
 
@@ -61,7 +60,7 @@ def get_sign(wallet_key, public_key, private_key):
 
 
 def split_to_array(value, delimeter):
-    return [unidecode.unidecode(x).lower() for x in re.split(delimeter, value)]
+    return [x.lower() for x in re.split(delimeter, value)]
 
 
 def convert_to_date(value, fmt='%d.%m.%Y %H:%M:%S.%f'):

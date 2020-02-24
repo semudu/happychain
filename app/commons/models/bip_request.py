@@ -15,16 +15,16 @@ class BipRequest(Request):
         self.__values = None
 
         if self.ctype == CType.TEXT:
-            ctx_arr = self.__get_splitted_arr(self.context)
+            ctx_arr = split_to_array(self.context, Globals.DELIMITER)
             self.__command = ctx_arr[0]
             self.__extras = ctx_arr[1:]
         elif self.ctype == CType.POLL:
-            ctx_arr = self.__get_splitted_arr(self.poll.poll_id)
+            ctx_arr = split_to_array(self.poll.poll_id, Globals.DELIMITER)
             self.__command = ctx_arr[0]
             self.__extras = ctx_arr[1:]
             self.__values = self.poll.values
         elif self.ctype == CType.POSTBACK:
-            ctx_arr = self.__get_splitted_arr(self.postback.value)
+            ctx_arr = split_to_array(self.postback.value, Globals.DELIMITER)
             self.__command = ctx_arr[0]
             self.__extras = ctx_arr[1:]
         elif self.ctype == CType.BUZZ:
@@ -43,7 +43,3 @@ class BipRequest(Request):
         if len(self.__extras) >= order:
             return self.__extras[order - 1]
         return None
-
-    @staticmethod
-    def __get_splitted_arr(ctx):
-        return split_to_array(ctx, Globals.DELIMITER)
