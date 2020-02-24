@@ -276,8 +276,8 @@ class Database:
         return None
 
     def update_free_message(self, transaction, msg_type, message):
-        self.__execute(SQL.UPDATE_FREE_MESSAGE, (FreeMessage(msg_type, message).get_json_str(), transaction["id"]),
-                       False)
+        free_msg = FreeMessage(msg_type, message).get_json_str()
+        self.__execute(SQL.UPDATE_FREE_MESSAGE, (free_msg, transaction["id"]), False)
 
         return transaction
 
