@@ -3,7 +3,7 @@ import threading
 from app.commons.constants.globals import *
 from mysql.connector import Error
 from app.commons.log import get_logger
-from .database import Database
+from app.commons.database import Database
 from .channel import Channel
 
 logger = get_logger(__name__)

@@ -7,7 +7,7 @@ import time
 from bipwrapper import BipWrapper
 
 from app.commons.log import get_logger
-from app.service.database import Database
+from app.commons.database import Database
 from app.commons.utils import get_name_with_own_suffix
 from app.commons.constants.globals import Globals
 from app.commons.constants.message import Message

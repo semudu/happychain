@@ -4,7 +4,7 @@ import flask_excel as excel
 from flask import Blueprint, request, jsonify
 from flask_basicauth import BasicAuth
 
-from app.service.database import Database
+from app.commons.database import Database
 from app.service.service import Service
 from app.commons.log import get_logger
 

@@ -1,14 +1,16 @@
 from decimal import *
 
+from config import DB
+
 import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
 
 from app.commons.utils import hash_password, convert_to_date
 from app.commons.constants.globals import *
-from config import DB
-
+from app.commons.models.free_message import FreeMessage
 from app.commons.constants.queries import SQL
+from app.commons.cache import Cache
 
 
 class Database:
@@ -22,6 +24,7 @@ class Database:
                                                                                charset="utf8",
                                                                                pool_size=5,
                                                                                pool_reset_session=True)
+            self.cache = Cache()
 
         except Error as e:
             print("Error while connecting to MySQL", e)
@@ -187,8 +190,9 @@ class Database:
     def get_all_msisdn_list(self):
         return self.__fetchall(SQL.GET_USERS_MSISDN_LIST)
 
-    def get_scope_users_by_user_id_and_like_name(self, user_id, start_with=""):
-        return self.__fetchall(SQL.GET_SCOPE_USERS_BY_USER_ID_AND_LIKE_NAME, (user_id, user_id, start_with + "%"))
+    def get_scope_users_by_user_id_and_like_name(self, user_id, start_with="", offset=0, limit=18446744073709551615):
+        return self.__fetchall(SQL.GET_SCOPE_USERS_BY_USER_ID_AND_LIKE_NAME,
+                               (user_id, user_id, start_with + "%", offset, limit))
 
     def get_user_id_by_msisdn(self, msisdn):
         user_id = self.__fetchone(SQL.GET_USER_ID_BY_MSISDN, (msisdn,))
@@ -272,8 +276,8 @@ class Database:
         return None
 
     def update_free_message(self, transaction, msg_type, message):
-        free_message = '{"type":"%s","content":"%s"}' % (msg_type, message)
-        self.__execute(SQL.UPDATE_FREE_MESSAGE, (free_message, transaction["id"]), False)
+        self.__execute(SQL.UPDATE_FREE_MESSAGE, (FreeMessage(msg_type, message).get_json_str(), transaction["id"]),
+                       False)
 
         return transaction
 
@@ -313,3 +317,15 @@ class Database:
 
     def get_top_ten_user_by_scope(self, scope_id):
         return self.__fetchall(SQL.GET_TOP_TEN_USER_BY_SCOPE, (Globals.EARN_AMOUNT, Globals.SEND_AMOUNT, scope_id))
+
+    def add_empty_out_message(self, user_id):
+        return self.__execute(SQL.ADD_EMPTY_OUT_MESSAGE, (user_id,), True)
+
+    def update_out_message(self, identity, ctype, content):
+        return self.__execute(SQL.UPDATE_OUT_MESSAGE, (FreeMessage(ctype, content).get_json_str(), identity), False)
+
+    def check_empty_out_message(self, user_id):
+        out_message = self.__fetchall(SQL.GET_USER_LAST_EMPTY_OUT_MESSAGE_TODAY, (user_id,))
+        if out_message:
+            return out_message[0]
+        return None

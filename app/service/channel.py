@@ -5,13 +5,13 @@ from bipwrapper.type.button_type import ButtonType
 from bipwrapper.type.poll_type import PollType
 from bipwrapper.type.ctype import CType
 
-from app.commons.bip_request import BipRequest
+from app.commons.models.bip_request import BipRequest
 from app.commons.constants.globals import *
 from app.commons.constants.command import Command
 from app.commons.constants.message import Message
 from app.commons.log import get_logger
 from app.commons.utils import *
-from .database import Database
+from app.commons.database import Database
 from config import APP, BIP
 
 logger = get_logger(__name__)
@@ -32,7 +32,7 @@ class Channel:
             Command.FINISH_TRANSACTION: self.send_message,
             Command.TRANSACTION_COUNT: self.send_transaction_count,
             Command.TOP_TEN: self.send_top_ten,
-            Command.SEND_MESSAGE_ALL: self.send_message_all,
+            Command.SEND_MESSAGE_ALL: self.start_send_all_transaction,
             Command.GET_TRANSACTION_REPORT: self.send_transaction_report,
             Command.ADD_USER: self.add_user,
             Command.REMOVE_USER: self.remove_user
@@ -109,6 +109,29 @@ class Channel:
     def send_last_n_received(self, request):
         self.__send_last_n(request, self.db.get_last_n_received)
 
+    def __send_multi_user_list(self, msisdn, user_id, start_with, offset, user_list=None):
+        if user_list is None:
+            user_list = self.db.get_scope_users_by_user_id_and_like_name(user_id, start_with, offset, 7)
+
+        if len(user_list) > 6:
+            user_tuple = get_key_value_tuple(user_list[:6], "id", "full_name")
+            user_tuple.append((-1, "Diğer"))
+            poll_id = "%s%s%s%s%s" % (Command.MESSAGE_LIST, Globals.DELIMITER, start_with, Globals.DELIMITER, offset)
+        else:
+            user_tuple = get_key_value_tuple(user_list, "id", "full_name")
+            poll_id = Command.MESSAGE_LIST
+
+        self.bip_api.single.send_poll_message(
+            msisdn,
+            poll_id,
+            Message.SHORT_LIST_TITLE % start_with,
+            Message.SHORT_LIST_DESC % Globals.SEND_AMOUNT,
+            Message.SHORT_LIST_IMAGE,
+            1,
+            PollType.SINGLE_CHOOSE,
+            user_tuple,
+            "OK")
+
     def send_user_list(self, request):
         start_with = request.command
         user_id = self.db.get_user_id_by_msisdn(request.sender)
@@ -116,20 +139,11 @@ class Channel:
 
         if balance >= Globals.SEND_AMOUNT:
             if len(start_with) > 0:
-                user_list = self.db.get_scope_users_by_user_id_and_like_name(user_id, request.command)
-                if len(user_list) > 0:
-                    if len(user_list) > 1:
-                        user_tuple = get_key_value_tuple(user_list, "id", "full_name")
-                        self.bip_api.single.send_poll_message(
-                            request.sender,
-                            Command.MESSAGE_LIST,
-                            Message.SHORT_LIST_TITLE % start_with,
-                            Message.SHORT_LIST_DESC % Globals.SEND_AMOUNT,
-                            Message.SHORT_LIST_IMAGE,
-                            1,
-                            PollType.SINGLE_CHOOSE,
-                            user_tuple,
-                            "OK")
+                user_list = self.db.get_scope_users_by_user_id_and_like_name(user_id, request.command, 0, 7)
+                size = len(user_list)
+                if size > 0:
+                    if size > 1:
+                        self.__send_multi_user_list(request.sender, user_id, start_with, 0, user_list)
                     else:
                         yes_no_tuple = [
                             (user_list[0]["id"], "Evet"),
@@ -151,34 +165,45 @@ class Channel:
             self.bip_api.single.send_text_message(request.sender, Message.INSUFFICIENT_FUNDS)
 
     def send_message_list(self, request):
-        target_user_id = request.value()
         user_id = self.db.get_user_id_by_msisdn(request.sender)
-        message_list = self.db.get_message_list_by_user_id(target_user_id)
-        if len(message_list) > 0:
-            message_tuple = get_key_value_tuple(message_list, "id", "text")
-            target_user = self.db.get_user_by_id(target_user_id)
-            self.bip_api.single.send_poll_message(
-                request.sender,
-                "%s%s%s%s%s%s%s" % (
-                    Command.FINISH_TRANSACTION, Globals.DELIMITER, str(target_user_id), Globals.DELIMITER, str(user_id),
-                    self.transfer_secret, str(target_user_id)),
-                Message.REASON_LIST_TITLE % (
-                    get_name_with_suffix(target_user["first_name"]), Globals.SEND_AMOUNT),
-                Message.REASON_LIST_DESC,
-                Message.REASON_LIST_IMAGE,
-                1,
-                PollType.SINGLE_CHOOSE,
-                message_tuple,
-                "OK")
+        if request.extra() is not None:
+            self.__send_multi_user_list(request.sender, user_id, request.extra(), request.extra(2))
+        else:
+            target_user_id = request.value()
+            message_list = self.db.get_message_list_by_user_id(target_user_id)
+            if len(message_list) > 0:
+                message_tuple = get_key_value_tuple(message_list, "id", "text")
+                target_user = self.db.get_user_by_id(target_user_id)
+                self.bip_api.single.send_poll_message(
+                    request.sender,
+                    "%s%s%s%s%s%s%s" % (
+                        Command.FINISH_TRANSACTION, Globals.DELIMITER, str(target_user_id), Globals.DELIMITER,
+                        str(user_id),
+                        self.transfer_secret, str(target_user_id)),
+                    Message.REASON_LIST_TITLE % (
+                        get_name_with_suffix(target_user["first_name"]), Globals.SEND_AMOUNT),
+                    Message.REASON_LIST_DESC,
+                    Message.REASON_LIST_IMAGE,
+                    1,
+                    PollType.SINGLE_CHOOSE,
+                    message_tuple,
+                    "OK")
 
     def non_command(self, request):
-        user_id = self.db.get_user_id_by_msisdn(request.sender)
-        free_message_transaction = self.db.check_free_message(user_id)
+        user = self.db.get_user_by_msisdn(request.sender)
+        free_message_transaction = self.db.check_free_message(user["id"])
         if free_message_transaction:
             self.__send_free_message(request.sender, free_message_transaction, request.ctype,
                                      request.context)
         else:
-            self.send_user_list(request)
+            if user["role"] in (Role.SCOPE_ADMIN, Role.SUPER_ADMIN):
+                out_message = self.db.check_empty_out_message(user["id"])
+                if out_message:
+                    self.send_message_all(out_message, request.ctype, request.context)
+                else:
+                    self.send_user_list(request)
+            else:
+                self.send_user_list(request)
 
     def send_message(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
@@ -231,9 +256,19 @@ class Channel:
             self.bip_api.single.send_text_message(request.sender, msg % (
                 user["full_name"], user["total_sent"], user["total_received"], user["total"]))
 
-    def send_message_all(self, request):
-        # TODO
-        pass
+    def start_send_all_transaction(self, request):
+        user_id = self.db.get_user_id_by_msisdn(request.sender)
+        self.db.add_empty_out_message(user_id)
+        self.bip_api.single.send_text_message(request.sender,
+                                              "Yazacağın ilk mesaj bulunduğun sorumluluğundaki tüm kullanıcılara gönderilecek.")
+
+    def send_message_all(self, out_message, ctype, content):
+        receivers = list(map(lambda user: user["msisdn"],
+                             self.db.get_scope_users_by_user_id_and_like_name(out_message["sender_id"])))
+        if ctype == CType.TEXT:
+            self.bip_api.multi.send_text_message(receivers, content)
+
+        self.db.update_out_message(out_message["id"], ctype, content)
 
     def send_transaction_report(self, request):
         # TODO

@@ -20,6 +20,12 @@ class DB:
     PASSWD = cfg["db"]["passwd"]
 
 
+class RedisConf:
+    HOST = cfg["redis"]["host"]
+    PORT = cfg["redis"]["port"]
+    PASSWORD = cfg["redis"]["passwd"]
+
+
 class BIP:
     ENVIRONMENT = cfg["bip"]["environment"]
     USERNAME = cfg["bip"]["user"]
@@ -27,6 +33,7 @@ class BIP:
 
 
 class FlaskConf:
+    SECRET_KEY = cfg["flask"]["secret_key"]
     BASIC_AUTH_USERNAME = cfg["flask"]["basic_auth"]["username"]
     BASIC_AUTH_PASSWORD = cfg["flask"]["basic_auth"]["password"]
     BASIC_AUTH_FORCE = cfg["flask"]["basic_auth"]["force"]
