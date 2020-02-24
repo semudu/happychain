@@ -80,7 +80,7 @@ class Channel:
 
     def send_menu(self, request):
         user = self.db.get_user_by_msisdn(request.sender)
-        if user["role"] in (Role.SCOPE_ADMIN, Role.SUPER_ADMIN):
+        if user["role"] in [Role.SCOPE_ADMIN, Role.SUPER_ADMIN]:
             menu = [
                 (Command.TRANSACTION_COUNT, "Gönderim Sayısı", ButtonType.POST_BACK),
                 (Command.TOP_TEN, "İlk 10", ButtonType.POST_BACK)
