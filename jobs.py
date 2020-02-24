@@ -5,13 +5,15 @@ import schedule
 import time
 
 from bipwrapper import BipWrapper
+from bipwrapper.type.poll_type import PollType
 
 from app.commons.log import get_logger
 from app.commons.database import Database
-from app.commons.utils import get_name_with_own_suffix
+from app.commons.utils import *
 from app.commons.constants.globals import Globals
 from app.commons.constants.message import Message
-from config import BIP
+from app.commons.constants.command import Command
+from config import BIP, APP
 
 logger = get_logger(__name__)
 
@@ -62,14 +64,25 @@ def birthday_job():
                     target_users = db.get_scope_users_by_user_id_and_like_name(user["id"])
                     if len(target_users) > 0:
                         message_json = json.loads(message[0]["text"])
-                        receivers = []
+                        message_list = db.get_message_list_by_user_id(user["id"])
+                        message_tuple = get_key_value_tuple(message_list, "id", "text")
                         for target_user in target_users:
                             if target_user["id"] != user["id"]:
-                                receivers.append(target_user["msisdn"])
-                        if len(receivers) > 0:
-                            bip_api.multi.send_text_message(receivers,
-                                                            message_json["message"] % get_name_with_own_suffix(
-                                                                user["full_name"]))
+                                bip_api.single.send_poll_message(
+                                    target_user["msisdn"],
+                                    "%s%s%s%s%s%s%s" % (
+                                        Command.FINISH_TRANSACTION, Globals.DELIMITER, str(user["id"]),
+                                        Globals.DELIMITER,
+                                        str(target_user["id"]),
+                                        APP.TRANSFER_SECRET, str(user["id"])),
+                                    message_json["title"] % get_name_with_own_suffix(user["full_name"]),
+                                    message_json["message"],
+                                    message_json["image"],
+                                    1,
+                                    PollType.SINGLE_CHOOSE,
+                                    message_tuple,
+                                    "OK")
+
                         bip_api.single.send_text_message(user["msisdn"],
                                                          Message.BIRTHDAY_MESSAGE % (
                                                              user["first_name"], Globals.LOAD_BALANCE_AMOUNT))
