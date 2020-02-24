@@ -83,8 +83,7 @@ class Channel:
         if user["role"] in (Role.SCOPE_ADMIN, Role.SUPER_ADMIN):
             menu = [
                 (Command.TRANSACTION_COUNT, "Gönderim Sayısı", ButtonType.POST_BACK),
-                (Command.TOP_TEN, "İlk 10", ButtonType.POST_BACK),
-                (Command.SEND_MESSAGE_ALL, "Toplu Mesaj", ButtonType.POST_BACK)
+                (Command.TOP_TEN, "İlk 10", ButtonType.POST_BACK)
             ]
         else:
             menu = [
