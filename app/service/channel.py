@@ -63,7 +63,8 @@ class Channel:
                 target_user = self.db.get_user_by_id(last_transaction["receiver_id"])
                 balance = self.db.get_balance_by_user_id(last_transaction["sender_id"])
                 self.db.update_free_message(last_transaction, msg_type, message)
-                self.__finish_transaction_message(msisdn, last_transaction["sender_id"], target_user, message, balance)
+                self.__finish_transaction_message(msisdn, last_transaction["sender_id"], target_user, message,
+                                                  balance)
             else:
                 # TODO other messsage types
                 self.bip_api.single.send_text_message(msisdn, "Şimdilik maalesef sadece yazı yollayabilirsin.")
