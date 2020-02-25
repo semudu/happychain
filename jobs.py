@@ -14,6 +14,7 @@ from app.commons.constants.globals import Globals
 from app.commons.constants.message import Message
 from app.commons.constants.command import Command
 from config import BIP, APP
+from app.commons.cache import Cache
 
 logger = get_logger(__name__)
 
@@ -47,6 +48,7 @@ def special_dates_job():
     try:
         special_date_messages = db.get_special_dates()
         if len(special_date_messages) > 0:
+            Cache.clear()
             logger.debug("special dates")
 
     except Exception as e:
@@ -57,6 +59,7 @@ def birthday_job():
     try:
         users = db.get_birthday_users()
         if len(users) > 0:
+            Cache.clear()
             for user in users:
                 scope_id = db.get_scope_id_by_user_id(user["id"])
                 message = db.get_out_message(scope_id, 'D')

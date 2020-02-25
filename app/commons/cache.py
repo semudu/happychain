@@ -28,3 +28,7 @@ class Cache:
     @staticmethod
     def delete(key):
         Cache.redis.delete(key)
+
+    @staticmethod
+    def clear():
+        Cache.redis.flushall()
