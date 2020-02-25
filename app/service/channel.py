@@ -13,6 +13,8 @@ from app.commons.log import get_logger
 from app.commons.utils import *
 from app.commons.database import Database
 from config import APP, BIP
+from app.commons.cache import Cache, Keys
+from app.commons.models.free_message import FreeMessage
 
 logger = get_logger(__name__)
 
@@ -55,16 +57,18 @@ class Channel:
         self.bip_api.single.send_text_message(target_user["msisdn"], Message.RECEIVED_MESSAGE % (
             user["full_name"], Globals.SEND_AMOUNT, message))
 
-    def __send_free_message(self, msisdn, last_transaction, msg_type, message=""):
+    def __send_free_message(self, msisdn, user_id, target_user_id, msg_type, message):
         if not message.strip():
             self.bip_api.single.send_text_message(msisdn, "Birşeyler yazabilirsin bence 😄")
         else:
             if msg_type == CType.TEXT:
-                target_user = self.db.get_user_by_id(last_transaction["receiver_id"])
-                balance = self.db.get_balance_by_user_id(last_transaction["sender_id"])
-                self.db.update_free_message(last_transaction, msg_type, message)
-                self.__finish_transaction_message(msisdn, last_transaction["sender_id"], target_user, message,
-                                                  balance)
+                self.db.transfer_points(user_id, target_user_id, Globals.FREE_MSG_ID,
+                                        FreeMessage(msg_type, message).get_json_str())
+
+                target_user = self.db.get_user_by_id(target_user_id)
+                balance = self.db.get_balance_by_user_id(user_id)
+
+                self.__finish_transaction_message(msisdn, user_id, target_user, message, balance)
             else:
                 # TODO other messsage types
                 self.bip_api.single.send_text_message(msisdn, "Şimdilik maalesef sadece yazı yollayabilirsin.")
@@ -84,7 +88,8 @@ class Channel:
             menu = [
                 (Command.MENU, "Menü", ButtonType.POST_BACK),
                 (Command.TRANSACTION_COUNT, "Gönderim Sayısı", ButtonType.POST_BACK),
-                (Command.TOP_TEN, "İlk 10", ButtonType.POST_BACK)
+                (Command.TOP_TEN, "İlk 10", ButtonType.POST_BACK),
+                (Command.SEND_MESSAGE_ALL, "Toplu Mesaj", ButtonType.POST_BACK)
             ]
         else:
             menu = [
@@ -115,7 +120,7 @@ class Channel:
 
         if len(user_list) > 6:
             user_tuple = get_key_value_tuple(user_list[:5], "id", "full_name")
-            user_tuple.append((-1, "Diğer"))
+            user_tuple.append((Globals.OTHER_USERS, "Diğer"))
             poll_id = "%s%s%s%s%s" % (
                 Command.MESSAGE_LIST, Globals.DELIMITER, start_with, Globals.DELIMITER, offset + 5)
         else:
@@ -148,7 +153,7 @@ class Channel:
                     else:
                         yes_no_tuple = [
                             (user_list[0]["id"], "Evet"),
-                            (-1, "Hayır")
+                            (Globals.NO, "Hayır")
                         ]
                         self.bip_api.single.send_poll_message(
                             request.sender,
@@ -168,7 +173,7 @@ class Channel:
     def send_message_list(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
         target_user_id = request.value()
-        if target_user_id == -1:
+        if target_user_id == Globals.OTHER_USERS:
             self.__send_multi_user_list(request.sender, user_id, request.extra_param(), int(request.extra_param(2)))
         else:
             message_list = self.db.get_message_list_by_user_id(target_user_id)
@@ -192,15 +197,17 @@ class Channel:
 
     def non_command(self, request):
         user = self.db.get_user_by_msisdn(request.sender)
-        free_message_transaction = self.db.check_free_message(user["id"])
-        if free_message_transaction:
-            self.__send_free_message(request.sender, free_message_transaction, request.ctype,
+        free_msg_target_user_id = Cache.get(Keys.FREE_MSG_BY_USER_ID % user["id"])
+        if free_msg_target_user_id:
+            Cache.delete(Keys.FREE_MSG_BY_USER_ID % user["id"])
+            self.__send_free_message(request.sender, user["id"], free_msg_target_user_id, request.ctype,
                                      request.content)
         else:
             if user["role"] in (Role.SCOPE_ADMIN, Role.SUPER_ADMIN):
-                out_message = self.db.check_empty_out_message(user["id"])
-                if out_message:
-                    self.send_message_all(out_message, request.ctype, request.content)
+                all_msg = Cache.get(Keys.ALL_MSG_BY_USER_ID % user["id"])
+                if all_msg is True:
+                    Cache.delete(Keys.ALL_MSG_BY_USER_ID % user["id"])
+                    self.send_message_all(user, request.ctype, request.content)
                 else:
                     self.send_user_list(request)
             else:
@@ -222,15 +229,17 @@ class Channel:
                                                           Message.SAME_TEAM_LIMIT % Globals.SEND_SAME_TEAM_LIMIT)
                     return
                 else:
-                    self.db.transfer_points(user_id, target_user_id, message_id)
 
                     target_user = self.db.get_user_by_id(target_user_id)
-                    message = self.db.get_message_by_id(message_id)
-                    balance = self.db.get_balance_by_user_id(user_id)
 
-                    if message_id != -1:
+                    if message_id != Globals.FREE_MSG_ID:
+                        self.db.transfer_points(user_id, target_user_id, message_id)
+                        message = self.db.get_message_by_id(message_id)
+                        balance = self.db.get_balance_by_user_id(user_id)
+
                         self.__finish_transaction_message(request.sender, user_id, target_user, message, balance)
                     else:
+                        Cache.put(Keys.FREE_MSG_BY_USER_ID % user_id, target_user["id"])
                         self.bip_api.single.send_text_message(request.sender,
                                                               Message.FREE_MESSAGE % target_user["first_name"])
 
@@ -259,17 +268,17 @@ class Channel:
 
     def start_send_all_transaction(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
-        self.db.add_empty_out_message(user_id)
+        Cache.put(Keys.ALL_MSG_BY_USER_ID % user_id, True)
         self.bip_api.single.send_text_message(request.sender,
-                                              "Yazacağın ilk mesaj bulunduğun sorumluluğundaki tüm kullanıcılara gönderilecek.")
+                                              "Yazacağın ilk mesaj sorumluluğundaki tüm kullanıcılara gönderilecek.")
 
-    def send_message_all(self, out_message, ctype, content):
-        receivers = list(map(lambda user: user["msisdn"],
-                             self.db.get_scope_users_by_user_id_and_like_name(out_message["sender_id"])))
+    def send_message_all(self, user, ctype, content):
+        receivers = list(map(lambda receiver: receiver["msisdn"],
+                             self.db.get_scope_users_by_user_id_and_like_name(user["id"])))
         if ctype == CType.TEXT:
             self.bip_api.multi.send_text_message(receivers, content)
 
-        self.db.update_out_message(out_message["id"], ctype, content)
+        self.bip_api.single.send_text_message(user["msisdn"], "Mesajın tüm kullanıcılara gönderildi.")
 
     def send_transaction_report(self, request):
         # TODO

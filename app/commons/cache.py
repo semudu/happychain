@@ -1,31 +1,30 @@
 import redis
-from config import RedisConf
-from app.commons.log import get_logger
+import pickle
 
-logger = get_logger(__name__)
+
+class Keys:
+    USER_ID_BY_MSISDN = "user_id--msisdn:%s"
+    USER_BY_ID = "user--user_id:%s"
+    USER_BY_MSISDN = "user--msisdn:%s"
+    MESSAGE_LIST_BY_USER_ID = "message_list--user_id:%s"
+    MESSAGE_BY_ID = "message-message_id:%s"
+    FREE_MSG_BY_USER_ID = "free_message--user_id:%s"
+    ALL_MSG_BY_USER_ID = "all_message--user_id:%s"
 
 
 class Cache:
-    def __init__(self):
-        try:
-            self.r = redis.StrictRedis(host=RedisConf.HOST,
-                                       port=RedisConf.PORT,
-                                       password=RedisConf.PASSWORD,
-                                       decode_responses=True)
-            self.__up = True
-        except Exception as e:
-            logger.error("Redis initialize error. ", str(e))
-            self.__up = False
+    redis = redis.Redis()
 
-    def is_up(self):
-        return self.__up
+    @staticmethod
+    def put(key, value):
+        Cache.redis.set(key, pickle.dumps(value))
 
-    def get(self, key):
-        if self.__up:
-            return 0
+    @staticmethod
+    def get(key):
+        if Cache.redis.exists(key):
+            return pickle.loads(Cache.redis.get(key))
         return None
 
-    def set(self, key):
-        if self.__up:
-            # TODO
-            pass
+    @staticmethod
+    def delete(key):
+        Cache.redis.delete(key)
