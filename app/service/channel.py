@@ -109,7 +109,7 @@ class Channel:
     def send_last_n_received(self, request):
         self.__send_last_n(request, self.db.get_last_n_received)
 
-    def __send_multi_user_list(self, msisdn, user_id, start_with, offset, user_list=None):
+    def __send_multi_user_list(self, msisdn, user_id, start_with, offset: int, user_list=None):
         if user_list is None:
             user_list = self.db.get_scope_users_by_user_id_and_like_name(user_id, start_with, offset, 7)
 
@@ -169,7 +169,7 @@ class Channel:
         user_id = self.db.get_user_id_by_msisdn(request.sender)
         target_user_id = request.value()
         if target_user_id == -1:
-            self.__send_multi_user_list(request.sender, user_id, request.extra_param(), request.extra_param(2))
+            self.__send_multi_user_list(request.sender, user_id, request.extra_param(), int(request.extra_param(2)))
         else:
             message_list = self.db.get_message_list_by_user_id(target_user_id)
             if len(message_list) > 0:
