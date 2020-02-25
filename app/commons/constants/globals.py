@@ -12,6 +12,9 @@ class Globals:
     EARN_AMOUNT = 1
     DEFAULT_PASSWD = "123456"
     DELIMITER = ":::"
+    FREE_MSG_ID = -1
+    OTHER_USERS = -2
+    NO = -3
 
 
 class Role:

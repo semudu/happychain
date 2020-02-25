@@ -35,7 +35,7 @@ class SQL:
     UPDATE_BALANCE_ALL = "update wallet set balance = %s;"
 
     # --------------- TRANSACTION --------------- #
-    ADD_TRANSACTION = "insert into transaction (sender_id, receiver_id, amount, date, message_id, is_active) values (%s,%s,%s,CURRENT_TIMESTAMP(),%s,1);"
+    ADD_TRANSACTION = "insert into transaction (sender_id, receiver_id, amount, date, message_id, free_message, is_active) values (%s,%s,%s,CURRENT_TIMESTAMP(),%s,%s,1);"
     GET_TOTAL_SENT = "SELECT sum(amount) total_sent FROM transaction WHERE is_active = 1 and sender_id = %s;"
     GET_TOTAL_RECEIVED = "SELECT sum(amount) total_received FROM transaction WHERE is_active = 1 and receiver_id = %s;"
     GET_USER_SENT_COUNT_BY_RECEIVER_TODAY = "select count(*) from transaction where sender_id = %s and receiver_id = %s and date = curdate() and is_active = 1;"
@@ -54,8 +54,3 @@ class SQL:
     GET_MESSAGE_LIST_BY_USER_ID = "select r.id, r.text from ( select * from message where direction = 'IN' and type = 'D' and exists(select * from user u where dayofmonth(date_of_birth) = dayofmonth(curdate()) and month(date_of_birth) = month(curdate()) and id = %s) union select * from message where direction = 'IN' and SPLIT_STRING(date, '/', 1) = dayofmonth(curdate()) and SPLIT_STRING(date, '/', 2) = month(curdate()) and (type is null or type = (select gender from user where id = %s)) union select m.* from message m, team t, user u where u.id = %s and u.team_id = t.id and m.direction = 'IN' and (m.type is null or m.type in ('K', 'E')) and m.date is null and ((exists(select * from message where scope_id = t.scope_id) and m.scope_id = t.scope_id) or (not exists(select * from message where scope_id = t.scope_id) and m.scope_id = 0))) r order by r.date desc, r.type desc, r.id asc limit 6;"
     GET_SPECIAL_DATES = "select * from message where direction = 'OUT' and type='S' and scope_id = 0 and split_string(date,'/',1) = dayofmonth(curdate()) and split_string(date,'/',2) = month(curdate());"
     GET_OUT_MESSAGES = "select text from message where scope_id=%s and type=%s and direction='OUT' union all select text from message where scope_id=0 and type=%s and direction='OUT' and not exists(select * from message where scope_id=%s and type=%s and direction='OUT');"
-
-    # ------------ OUT - MESSAGE ------------ #
-    ADD_EMPTY_OUT_MESSAGE = "insert into out_message (sender_id) values (%s);"
-    UPDATE_OUT_MESSAGE = "update out_message set message = %s where id = %s;"
-    GET_USER_LAST_EMPTY_OUT_MESSAGE_TODAY = "select * from out_message where sender_id = %s and message is null and date(date) = date(curdate()) order by id desc limit 1;"

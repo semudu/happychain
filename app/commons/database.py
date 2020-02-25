@@ -10,7 +10,11 @@ from app.commons.utils import hash_password, convert_to_date
 from app.commons.constants.globals import *
 from app.commons.models.free_message import FreeMessage
 from app.commons.constants.queries import SQL
-from app.commons.cache import Cache
+from app.commons.cache import *
+
+from app.commons.log import get_logger
+
+logger = get_logger(__name__)
 
 
 class Database:
@@ -24,7 +28,7 @@ class Database:
                                                                                charset="utf8",
                                                                                pool_size=5,
                                                                                pool_reset_session=True)
-            self.cache = Cache()
+
 
         except Error as e:
             print("Error while connecting to MySQL", e)
@@ -173,16 +177,24 @@ class Database:
         return self.__execute(SQL.DELETE_USER, (identity,), False)
 
     def get_user_by_id(self, identity):
-        result = self.__fetchall(SQL.GET_USER_BY_ID, (identity,))
-        if len(result) > 0:
-            return result[0]
-        return None
+        user = Cache.get(Keys.USER_BY_ID % identity)
+        if user is None:
+            result = self.__fetchall(SQL.GET_USER_BY_ID, (identity,))
+            if len(result) > 0:
+                user = result[0]
+                Cache.put(Keys.USER_BY_ID % identity, user)
+
+        return user
 
     def get_user_by_msisdn(self, msisdn):
-        result = self.__fetchall(SQL.GET_USER_BY_MSISDN, (msisdn,))
-        if len(result) > 0:
-            return result[0]
-        return None
+        user = Cache.get(Keys.USER_BY_MSISDN % msisdn)
+        if user is None:
+            result = self.__fetchall(SQL.GET_USER_BY_MSISDN, (msisdn,))
+            if len(result) > 0:
+                user = result[0]
+                Cache.put(Keys.USER_BY_MSISDN % msisdn, user)
+
+        return user
 
     def get_users(self, start_with=""):
         return self.__fetchall(SQL.GET_USERS_LIKE_NAME, (start_with + "%",))
@@ -195,8 +207,12 @@ class Database:
                                (user_id, user_id, start_with + "%", offset, limit))
 
     def get_user_id_by_msisdn(self, msisdn):
-        user_id = self.__fetchone(SQL.GET_USER_ID_BY_MSISDN, (msisdn,))
-        return user_id if user_id else None
+        user_id = Cache.get(Keys.USER_ID_BY_MSISDN % msisdn)
+        if user_id is None:
+            user_id = self.__fetchone(SQL.GET_USER_ID_BY_MSISDN, (msisdn,))
+            Cache.put(Keys.USER_ID_BY_MSISDN % msisdn, user_id)
+
+        return user_id
 
     def get_birthday_users(self):
         return self.__fetchall(SQL.GET_BIRTHDAY_USERS)
@@ -222,23 +238,33 @@ class Database:
         return self.__fetchall(SQL.GET_LAST_N_RECEIVED, (user_id, count))
 
     def get_message_list_by_user_id(self, user_id):
-        return self.__fetchall(SQL.GET_MESSAGE_LIST_BY_USER_ID, (user_id, user_id, user_id))
+        messages = Cache.get(Keys.MESSAGE_LIST_BY_USER_ID % user_id)
+        if messages is None:
+            messages = self.__fetchall(SQL.GET_MESSAGE_LIST_BY_USER_ID, (user_id, user_id, user_id))
+            Cache.put(Keys.MESSAGE_LIST_BY_USER_ID % user_id, messages)
+
+        return messages
 
     def get_message_by_id(self, message_id):
-        result = self.__fetchone(SQL.GET_MESSAGE_BY_ID, (message_id,))
-        return result if result else None
+        message = Cache.get(Keys.MESSAGE_BY_ID % message_id)
+        if message is None:
+            message = self.__fetchone(SQL.GET_MESSAGE_BY_ID, (message_id,))
+            Cache.put(Keys.MESSAGE_BY_ID, message)
+
+        return message
 
     def get_balance_by_user_id(self, user_id):
         result = self.__fetchone(SQL.GET_BALANCE_BY_USER_ID, (user_id,))
         return Decimal(result) if result else 0
 
-    def transfer_points(self, sender_id, receiver_id, message_id):
+    def transfer_points(self, sender_id, receiver_id, message_id, free_message=None):
         try:
             conn = self.connection_pool.get_connection()
 
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
-                cursor.execute(SQL.ADD_TRANSACTION, (sender_id, receiver_id, Globals.SEND_AMOUNT, message_id))
+                cursor.execute(SQL.ADD_TRANSACTION,
+                               (sender_id, receiver_id, Globals.SEND_AMOUNT, message_id, free_message))
                 cursor.execute(SQL.REMOVE_BALANCE_BY_USER, (Globals.SEND_AMOUNT - Globals.EARN_AMOUNT, sender_id))
                 cursor.execute(SQL.ADD_BALANCE_BY_USER, (Globals.SEND_AMOUNT, receiver_id))
                 conn.commit()
@@ -266,16 +292,13 @@ class Database:
     def get_special_dates(self):
         return self.__fetchall(SQL.GET_SPECIAL_DATES)
 
-    def get_out_message(self, scope_id, message_type):
-        return self.__fetchall(SQL.GET_OUT_MESSAGES, (scope_id, message_type, message_type, scope_id, message_type))
-
     def check_free_message(self, user_id):
         last_transaction = self.__fetchall(SQL.GET_USER_LAST_TRANSACTION_BY_EMPTY_MESSAGE_TODAY, (user_id,))
         if last_transaction:
             return last_transaction[0]
         return None
 
-    def update_free_message(self, transaction, msg_type, message):
+    def insert_free_message(self, transaction, msg_type, message):
         free_msg = FreeMessage(msg_type, message).get_json_str()
         self.__execute(SQL.UPDATE_FREE_MESSAGE, (free_msg, transaction["id"]), False)
 
@@ -317,15 +340,3 @@ class Database:
 
     def get_top_ten_user_by_scope(self, scope_id):
         return self.__fetchall(SQL.GET_TOP_TEN_USER_BY_SCOPE, (Globals.EARN_AMOUNT, Globals.SEND_AMOUNT, scope_id))
-
-    def add_empty_out_message(self, user_id):
-        return self.__execute(SQL.ADD_EMPTY_OUT_MESSAGE, (user_id,), True)
-
-    def update_out_message(self, identity, ctype, content):
-        return self.__execute(SQL.UPDATE_OUT_MESSAGE, (FreeMessage(ctype, content).get_json_str(), identity), False)
-
-    def check_empty_out_message(self, user_id):
-        out_message = self.__fetchall(SQL.GET_USER_LAST_EMPTY_OUT_MESSAGE_TODAY, (user_id,))
-        if out_message:
-            return out_message[0]
-        return None
