@@ -14,7 +14,7 @@ from app.commons.constants.globals import Globals
 from app.commons.constants.message import Message
 from app.commons.constants.command import Command
 from config import BIP, APP
-from app.commons.cache import Cache
+from app.commons.cache import *
 
 logger = get_logger(__name__)
 
@@ -59,8 +59,8 @@ def birthday_job():
     try:
         users = db.get_birthday_users()
         if len(users) > 0:
-            Cache.clear()
             for user in users:
+                Cache.delete(Keys.MESSAGE_LIST_BY_USER_ID % user["id"])
                 scope_id = db.get_scope_id_by_user_id(user["id"])
                 message = db.get_out_message(scope_id, 'D')
                 if len(message) > 0:
@@ -100,7 +100,13 @@ def reminder_job():
         logger.debug("send reminder to deactive users")
     except Exception as e:
         logger.error("An error occured in reminder job: " + str(e))
+        
 
+def clear_cache():
+    try:
+        Cache.clear()
+    except Exception as e:
+        logger.error("An error occured in reminder job: " + str(e))
 
 if __name__ == "__main__":
     try:
@@ -108,6 +114,7 @@ if __name__ == "__main__":
         schedule.every().day.at(Globals.BIRTHDAY_MSG_TIME).do(birthday_job)
         schedule.every().day.at(Globals.LOAD_BALANCE_TIME).do(load_balance_job)
         schedule.every().day.at(Globals.RESET_BALANCE_TIME).do(reset_balance_job)
+        schedule.every().day.at(Globals.CLEAR_CACHE_TIME).do(clear_cache)
 
         while True:
             schedule.run_pending()
