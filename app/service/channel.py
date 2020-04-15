@@ -273,12 +273,15 @@ class Channel:
                                               "Yazacağın ilk mesaj sorumluluğundaki tüm kullanıcılara gönderilecek.")
 
     def send_message_all(self, user, ctype, content):
-        receivers = list(map(lambda receiver: receiver["msisdn"],
-                             self.db.get_scope_users_by_user_id_and_like_name(user["id"])))
-        if ctype == CType.TEXT:
-            self.bip_api.multi.send_text_message(receivers, content)
+        if not content.strip():
+            receivers = list(map(lambda receiver: receiver["msisdn"],
+                                 self.db.get_scope_users_by_user_id_and_like_name(user["id"])))
+            if ctype == CType.TEXT:
+                self.bip_api.multi.send_text_message(receivers, content)
 
-        self.bip_api.single.send_text_message(user["msisdn"], "Mesajın tüm kullanıcılara gönderildi.")
+            self.bip_api.single.send_text_message(user["msisdn"], "Mesajın tüm kullanıcılara gönderildi.")
+        else:
+            self.bip_api.single.send_text_message(user["msisdn"], "Toplu mesaj iptal edildi.")
 
     def send_transaction_report(self, request):
         # TODO
