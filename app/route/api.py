@@ -1,12 +1,12 @@
 from collections import OrderedDict
-
-import flask_excel as excel
 from flask import Blueprint, request, jsonify
 from flask_basicauth import BasicAuth
 
 from app.commons.database import Database
 from app.service.service import Service
 from app.commons.log import get_logger
+
+import flask_excel as excel
 
 logger = get_logger(__name__)
 
@@ -15,8 +15,6 @@ api.config = {}
 
 db = Database()
 service = Service()
-
-excel.init_excel(api)
 
 basic_auth = BasicAuth(api)
 
