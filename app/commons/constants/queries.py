@@ -45,7 +45,7 @@ class SQL:
     GET_LAST_N_RECEIVED_MESSAGES_BY_TEAM = "select u_s.first_name from_first_name, u_s.last_name from_last_name, tm.name from_team, u_r.first_name to_first_name, u_r.last_name to_last_name, (case when t.message_id = -1 then t.free_message ->> '$.content' else m.text end) message, unix_timestamp(t.date) 'timestamp' from transaction t, team tm, user u_r, user u_s, message m where u_s.id = t.sender_id and u_s.team_id = tm.id and t.receiver_id = u_r.id and m.id = t.message_id and u_r.team_id = %s order by t.date desc limit %s;"
     GET_USER_LAST_TRANSACTION_BY_EMPTY_MESSAGE_TODAY = "select * from transaction where sender_id = %s and is_active = 1 and message_id=-1 and free_message is null and date(date) = date(curdate()) order by id desc limit 1;"
     UPDATE_FREE_MESSAGE = "update transaction set free_message = %s where id = %s;"
-    ARCHIVE_ACTIVE_TRANSACTIONS = "insert into transaction_archive (date, archive_date, sender_id, receiver_id, message_id, free_text, amount) select date, curdate(), sender_id, receiver_id, message_id, free_text, amount from transaction where is_active = 1;"
+    ARCHIVE_ACTIVE_TRANSACTIONS = "insert into transaction_archive (date, archive_date, sender_id, receiver_id, message_id, free_message, amount) select date, curdate(), sender_id, receiver_id, message_id, free_message amount from transaction where is_active = 1;"
     GET_TRANSACTION_COUNT_BY_SCOPE = "select count(*) from transaction t where t.is_active = 1 and sender_id in ( select u.id from user u, team t where u.team_id = t.id and t.scope_id = %s)"
     TRUNCATE_TRANSACTIONS = "truncate table transaction;"
 
