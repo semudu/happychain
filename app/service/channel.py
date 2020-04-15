@@ -273,7 +273,7 @@ class Channel:
                                               "Yazacağın ilk mesaj sorumluluğundaki tüm kullanıcılara gönderilecek.")
 
     def send_message_all(self, user, ctype, content):
-        if not content.strip():
+        if len(content) > 5:
             receivers = list(map(lambda receiver: receiver["msisdn"],
                                  self.db.get_scope_users_by_user_id_and_like_name(user["id"])))
             if ctype == CType.TEXT:
