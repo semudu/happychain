@@ -48,8 +48,14 @@ def special_dates_job():
     try:
         special_date_messages = db.get_special_dates()
         if len(special_date_messages) > 0:
-            Cache.delete(Keys.MESSAGE_LIST_BY_USER_ID % "*")
-            logger.debug("special dates")
+            Cache.multiple_delete(Keys.MESSAGE_LIST_BY_USER_ID % "*")
+            for special_date_message in special_date_messages:
+                content = json.loads(special_date_message["text"])
+                receivers = list(map(lambda msisdn: msisdn["msisdn"], db.get_all_msisdn_list()))
+                for receiver in receivers:
+                    bip_api.single.send_image(receiver, content["image"], 1, 1)
+                    for message in content["messages"]:
+                        bip_api.single.send_text_message(receiver, message)
 
     except Exception as e:
         logger.error("An error occured in special date job: " + str(e))
@@ -61,12 +67,11 @@ def birthday_job():
         if len(users) > 0:
             for user in users:
                 Cache.delete(Keys.MESSAGE_LIST_BY_USER_ID % user["id"])
-                scope_id = db.get_scope_id_by_user_id(user["id"])
-                message = db.get_out_message(scope_id, 'D')
+                message = db.get_birthday_message()
                 if len(message) > 0:
                     target_users = db.get_scope_users_by_user_id_and_like_name(user["id"])
                     if len(target_users) > 0:
-                        message_json = json.loads(message[0]["text"])
+                        content = json.loads(message)
                         message_list = db.get_message_list_by_user_id(user["id"])
                         message_tuple = get_key_value_tuple(message_list, "id", "text")
                         for target_user in target_users:
@@ -78,14 +83,15 @@ def birthday_job():
                                         Globals.DELIMITER,
                                         str(target_user["id"]),
                                         APP.TRANSFER_SECRET, str(user["id"])),
-                                    message_json["title"] % get_name_with_own_suffix(user["full_name"]),
-                                    message_json["message"],
-                                    message_json["image"],
+                                    content["title"] % get_name_with_own_suffix(user["full_name"]),
+                                    content["message"],
+                                    content["image"],
                                     1,
                                     PollType.SINGLE_CHOOSE,
                                     message_tuple,
                                     "OK")
 
+                        bip_api.single.send_image(user["msisdn"], content["image"], 1, 1)
                         bip_api.single.send_text_message(user["msisdn"],
                                                          Message.BIRTHDAY_MESSAGE % (
                                                              user["first_name"], Globals.LOAD_BALANCE_AMOUNT))
