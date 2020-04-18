@@ -137,7 +137,7 @@ class Database:
 
     def get_scope_id_by_user_id(self, user_id):
         result = self.__fetchall(SQL.GET_SCOPE_BY_USER_ID, (user_id,))
-        return len(result) > 0 if result[0]["id"] else -1
+        return result[0]["id"] if len(result) > 0 else -1
 
     def add_user(self, msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id):
         try:
