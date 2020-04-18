@@ -26,6 +26,12 @@ class Cache:
         return None
 
     @staticmethod
+    def multiple_delete(pattern):
+        keys = Cache.redis.keys(pattern)
+        for key in keys:
+            Cache.delete(key)
+
+    @staticmethod
     def delete(key):
         Cache.redis.delete(key)
 

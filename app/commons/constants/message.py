@@ -18,6 +18,6 @@ class Message:
     SENT_MESSAGE = "%s\n\n%s\n\nmesajını da ileterek %s IMS yolladın ve bu gönderimden sen de %s IMS kazanmış oldun 👏\n\nMevcut bakiyen: %s IMS"
     FREE_MESSAGE = "Yazacağın ilk mesaj %s gönderilecek."
     RECEIVED_MESSAGE = "%s sana aşağıdaki mesajla birlikte %s IMS yolladı.\n\n%s"
-    BIRTHDAY_MESSAGE = "İyi ki doğdun %s 🎂 Nice mutlu ve birlikte yıllara 🎈\n\nBakiyene %s IMS ekledik güle güle kullan 😇"
+    BIRTHDAY_MESSAGE = "İyi ki doğdun %s 🎂 Birlikte Nice mutlu yıllara 🎈\n\nÇam sakızı çoban armağanı, bakiyene %s IMS ekledik güle güle kullan 😇"
     LOAD_BALANCE_MESSAGE = "Bakiyene %s IMS yüklendi 🙃 Güle güle kullan 👼"
-    RESET_BALANCE_MESSAGE = "Yeni ay, yeni bakiye 🙃 Bakiyende %s IMS' i güle güle kullan."
+    RESET_BALANCE_MESSAGE = "Yeni ay, yeni bakiye 🙃 Bakiyendeki %s IMS' i güle güle kullan."

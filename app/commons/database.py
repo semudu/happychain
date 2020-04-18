@@ -289,6 +289,9 @@ class Database:
             return False
         return True
 
+    def get_birthday_message(self):
+        return self.__fetchone(SQL.GET_BIRTHDAY_MESSAGE)
+
     def get_special_dates(self):
         return self.__fetchall(SQL.GET_SPECIAL_DATES)
 
