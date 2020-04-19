@@ -36,7 +36,8 @@ class Channel:
             Command.SEND_MESSAGE_ALL: self.start_send_all_transaction,
             Command.GET_TRANSACTION_REPORT: self.send_transaction_report,
             Command.ADD_USER: self.add_user,
-            Command.REMOVE_USER: self.remove_user
+            Command.REMOVE_USER: self.remove_user,
+            Command.QUICK_REPLY: self.send_message_list
         }
 
     def run_command(self, request_json):
@@ -52,10 +53,32 @@ class Channel:
                                                  Globals.EARN_AMOUNT,
                                                  "{:.{}f}".format(balance, 2)))
 
-        # TODO quick reply
         user = self.db.get_user_by_id(user_id)
-        self.bip_api.single.send_text_message(target_user["msisdn"], Message.RECEIVED_MESSAGE % (
-            user["full_name"], Globals.SEND_AMOUNT, message))
+
+        if Cache.get(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"])):
+            self.bip_api.single.send_text_message(
+                target_user["msisdn"],
+                Message.QUICK_REPLY_TITLE % (
+                user["full_name"], Globals.SEND_AMOUNT, message))
+            Cache.delete(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"]))
+        else:
+            yes_no_tuple = [
+                (target_user["id"], "Tabiki! 😊"),
+                (Globals.NO, "Sonra yollarım... 🙄 ")
+            ]
+
+            self.bip_api.single.send_poll_message(
+                target_user["msisdn"],
+                Command.QUICK_REPLY,
+                Message.QUICK_REPLY_TITLE % (user["full_name"], Globals.SEND_AMOUNT, message),
+                Message.QUICK_REPLY_DESC,
+                Message.QUICK_REPLY_IMAGE,
+                1,
+                PollType.SINGLE_CHOOSE,
+                yes_no_tuple,
+                "OK")
+
+            Cache.put(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"]), True)
 
     def __send_free_message(self, msisdn, user_id, target_user_id, msg_type, message):
         if not message.strip():
@@ -173,7 +196,10 @@ class Channel:
     def send_message_list(self, request):
         user_id = self.db.get_user_id_by_msisdn(request.sender)
         target_user_id = request.value()
-        if target_user_id == Globals.OTHER_USERS:
+        if target_user_id == Globals.NO:  # Quick reply no answer
+            self.bip_api.single.send_text_message(request.sender, Message.QUICK_REPLY_NO)
+            Cache.delete(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user_id))
+        elif target_user_id == Globals.OTHER_USERS:  # User list next page
             self.__send_multi_user_list(request.sender, user_id, request.extra_param(), int(request.extra_param(2)))
         else:
             message_list = self.db.get_message_list_by_user_id(target_user_id)

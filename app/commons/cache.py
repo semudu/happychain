@@ -10,6 +10,7 @@ class Keys:
     MESSAGE_BY_ID = "message-message_id:%s"
     FREE_MSG_BY_USER_ID = "free_message--user_id:%s"
     ALL_MSG_BY_USER_ID = "all_message--user_id:%s"
+    QUICK_REPLY_BY_USER_IDS = "quick_reply--user_ids:%s-%s"
 
 
 class Cache:
