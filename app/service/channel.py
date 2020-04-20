@@ -80,7 +80,7 @@ class Channel:
                 yes_no_tuple,
                 "OK")
 
-            Cache.put(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"]), True)
+            Cache.put(Keys.QUICK_REPLY_BY_USER_IDS % (target_user["id"], user_id,), True)
 
     def __send_free_message(self, msisdn, user_id, target_user_id, msg_type, message):
         if not message.strip():
@@ -201,7 +201,7 @@ class Channel:
         target_user_id = request.value()
         if target_user_id == Globals.NO:  # Quick reply no answer
             self.bip_api.single.send_text_message(request.sender, Message.QUICK_REPLY_NO)
-            Cache.delete(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user_id))
+            Cache.delete(Keys.QUICK_REPLY_BY_USER_IDS % (target_user_id, user_id))
         elif target_user_id == Globals.OTHER_USERS:  # User list next page
             self.__send_multi_user_list(request.sender, user_id, request.extra_param(), int(request.extra_param(2)))
         else:

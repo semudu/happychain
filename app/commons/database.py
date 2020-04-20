@@ -294,7 +294,7 @@ class Database:
                 cursor = conn.cursor(prepared=True)
                 cursor.execute(SQL.ADD_TRANSACTION,
                                (sender_id, receiver_id, Globals.SEND_AMOUNT, message_id, free_message))
-                cursor.execute(SQL.REMOVE_BALANCE_BY_USER, (Globals.SEND_AMOUNT - Globals.EARN_AMOUNT, sender_id))
+                cursor.execute(SQL.REMOVE_BALANCE_BY_USER, ((Globals.SEND_AMOUNT - Globals.EARN_AMOUNT), sender_id))
                 cursor.execute(SQL.ADD_BALANCE_BY_USER, (Globals.SEND_AMOUNT, receiver_id))
                 conn.commit()
 
