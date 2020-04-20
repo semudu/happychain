@@ -87,3 +87,7 @@ def get_name_with_own_suffix(name) -> str:
 
 def is_after_minutes(date, minutes):
     return (datetime.datetime.now() - datetime.timedelta(minutes=minutes)) > date
+
+
+def now(fmt="%d.%m.%Y %H:%M:%S.%f"):
+    return datetime.datetime.now().strftime(fmt)

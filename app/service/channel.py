@@ -15,8 +15,10 @@ from app.commons.database import Database
 from config import APP, BIP
 from app.commons.cache import Cache, Keys
 from app.commons.models.free_message import FreeMessage
+from .service import Service
 
 logger = get_logger(__name__)
+service = Service()
 
 
 class Channel:
@@ -59,11 +61,11 @@ class Channel:
             self.bip_api.single.send_text_message(
                 target_user["msisdn"],
                 Message.QUICK_REPLY_TITLE % (
-                user["full_name"], Globals.SEND_AMOUNT, message))
+                    user["full_name"], Globals.SEND_AMOUNT, message))
             Cache.delete(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"]))
         else:
             yes_no_tuple = [
-                (target_user["id"], "Tabiki! 😊"),
+                (user_id, "Tabiki! 😊"),
                 (Globals.NO, "Sonra yollarım... 🙄 ")
             ]
 
@@ -112,7 +114,8 @@ class Channel:
                 (Command.MENU, "Menü", ButtonType.POST_BACK),
                 (Command.TRANSACTION_COUNT, "Gönderim Sayısı", ButtonType.POST_BACK),
                 (Command.TOP_TEN, "İlk 10", ButtonType.POST_BACK),
-                (Command.SEND_MESSAGE_ALL, "Toplu Mesaj", ButtonType.POST_BACK)
+                (Command.SEND_MESSAGE_ALL, "Toplu Mesaj", ButtonType.POST_BACK),
+                (Command.GET_TRANSACTION_REPORT, "Rapor Al", ButtonType.POST_BACK)
             ]
         else:
             menu = [
@@ -310,8 +313,10 @@ class Channel:
             self.bip_api.single.send_text_message(user["msisdn"], "Toplu mesaj iptal edildi.")
 
     def send_transaction_report(self, request):
-        # TODO
-        pass
+        user_id = self.db.get_user_id_by_msisdn(request.sender)
+        scope = self.db.get_scope_by_user_id(user_id)
+        file_info = service.get_report_file_info(scope["id"], scope["name"])
+        self.bip_api.single.send_document(request.sender, file_info["name"], file_info["url"])
 
     def add_user(self, request):
         # TODO

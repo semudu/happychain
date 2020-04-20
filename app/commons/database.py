@@ -2,6 +2,7 @@ from decimal import *
 
 from config import DB
 
+import json
 import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
@@ -47,6 +48,30 @@ class Database:
                 cursor.close()
 
                 return result[0] if result else None
+            else:
+                raise Exception("Connection is not connected!")
+        except Error as e:
+            raise e
+        finally:
+            if conn is not None:
+                conn.close()
+
+    def __fetchall_with_headers(self, sql: str, params: tuple = ()):
+        try:
+            conn = self.connection_pool.get_connection()
+            if conn.is_connected():
+                cursor = conn.cursor(prepared=True)
+                cursor.execute("SET lc_time_names = 'tr_TR';")
+                cursor.execute("SET NAMES utf8mb4")
+                cursor.execute("SET CHARACTER SET utf8mb4")
+                cursor.execute("SET character_set_connection=utf8mb4")
+                cursor.execute(sql, params)
+                row_headers = [x[0] for x in cursor.description]
+                row_values = cursor.fetchall()
+                result = json.loads(json.dumps(row_values))
+                result.insert(0, row_headers)
+                cursor.close()
+                return result
             else:
                 raise Exception("Connection is not connected!")
         except Error as e:
@@ -135,9 +160,13 @@ class Database:
     def get_scopes(self):
         return self.__fetchall(SQL.GET_SCOPES)
 
-    def get_scope_id_by_user_id(self, user_id):
+    def get_scope_by_user_id(self, user_id):
         result = self.__fetchall(SQL.GET_SCOPE_BY_USER_ID, (user_id,))
-        return result[0]["id"] if len(result) > 0 else -1
+        return result[0] if len(result) > 0 else -1
+
+    def get_scope_id_by_user_id(self, user_id):
+        scope = self.get_scope_by_user_id(user_id)
+        return scope["id"] if scope != -1 else scope
 
     def add_user(self, msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id):
         try:
@@ -343,3 +372,13 @@ class Database:
 
     def get_top_ten_user_by_scope(self, scope_id):
         return self.__fetchall(SQL.GET_TOP_TEN_USER_BY_SCOPE, (Globals.EARN_AMOUNT, Globals.SEND_AMOUNT, scope_id))
+
+    def get_sent_user_list_by_scope(self, scope_id):
+        return self.__fetchall_with_headers(SQL.GET_SENT_USER_LIST_BY_SCOPE_ID, (scope_id,))
+
+    def get_received_user_list_by_scope(self, scope_id):
+        return self.__fetchall_with_headers(SQL.GET_RECEIVED_USER_LIST_BY_SCOPE_ID, (scope_id,))
+
+    def get_top_user_list_by_scope_id(self, scope_id):
+        return self.__fetchall_with_headers(SQL.GET_TOP_USER_LIST_BY_SCOPE_ID, (
+            Globals.SEND_AMOUNT, Globals.EARN_AMOUNT, scope_id, Globals.SEND_AMOUNT, Globals.EARN_AMOUNT))

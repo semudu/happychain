@@ -1,9 +1,10 @@
+import threading
 from collections import OrderedDict
 from flask import Blueprint, request, jsonify
 from flask_basicauth import BasicAuth
 
 from app.commons.database import Database
-from app.service.service import Service
+from app.service.service import Service, Channel
 from app.commons.log import get_logger
 
 import flask_excel as excel
@@ -15,6 +16,7 @@ api.config = {}
 
 db = Database()
 service = Service()
+bip_channel = Channel()
 
 basic_auth = BasicAuth(api)
 
@@ -196,7 +198,8 @@ def get_users():
 def bip_process():
     try:
         if request.is_json:
-            service.process_command(request.get_json())
+            t = threading.Thread(target=bip_channel.run_command, args=(request.get_json(),))
+            t.start()
         return "", 200
 
     except Exception as e:

@@ -1,10 +1,13 @@
-import threading
-
 from app.commons.constants.globals import *
 from mysql.connector import Error
 from app.commons.log import get_logger
 from app.commons.database import Database
-from .channel import Channel
+from bipwrapper import BipWrapper
+
+from config import BIP
+
+from app.commons.utils import *
+import pyexcel as pe
 
 logger = get_logger(__name__)
 
@@ -12,7 +15,7 @@ logger = get_logger(__name__)
 class Service:
     def __init__(self):
         self.db = Database()
-        self.bip_channel = Channel()
+        self.bip_api = BipWrapper(BIP.ENVIRONMENT, BIP.USERNAME, BIP.PASSWORD)
 
     def import_user_array(self, user_array):
         teams = {}
@@ -42,6 +45,31 @@ class Service:
             "failed": failed
         }
 
-    def process_command(self, request_json):
-        t = threading.Thread(target=self.bip_channel.run_command, args=(request_json,))
-        t.start()
+    def get_report_file_info(self, scope_id, scope_name):
+        file_name = scope_name + "_Rapor_" + now("%d%m%Y%H%M") + ".xlsx"
+
+        sent_user_list = self.db.get_sent_user_list_by_scope(scope_id)
+        received_user_list = self.db.get_received_user_list_by_scope(scope_id)
+        top_user_list = self.db.get_top_user_list_by_scope_id(scope_id)
+
+        book = pe.Book(filename=file_name)
+        book += pe.Sheet(name="Gönderenler", sheet=sent_user_list)
+        book += pe.Sheet(name="Alanlar", sheet=received_user_list)
+        book += pe.Sheet(name="Puan Sıralaması", sheet=top_user_list)
+        book.save_as("/tmp/" + file_name)
+
+        try:
+            file = open("/tmp/" + file_name, "rb")
+
+            file_url = self.bip_api.upload.document(file)
+            os.remove("/tmp/" + file_name)
+
+            return {
+                "url": file_url,
+                "name": file_name[:-5]}
+
+        except Exception as e:
+            logger.error(e)
+        finally:
+            if file is not None:
+                file.close()
