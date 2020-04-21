@@ -233,7 +233,7 @@ class Database:
 
     def get_scope_users_by_user_id_and_like_name(self, user_id, start_with="", offset=0, limit=18446744073709551615):
         return self.__fetchall(SQL.GET_SCOPE_USERS_BY_USER_ID_AND_LIKE_NAME,
-                               (user_id, user_id, start_with + "%", offset, limit))
+                               (user_id, user_id, start_with + "%", "% " + start_with + "%", offset, limit))
 
     def get_user_id_by_msisdn(self, msisdn):
         user_id = Cache.get(Keys.USER_ID_BY_MSISDN % msisdn)
@@ -382,3 +382,6 @@ class Database:
     def get_top_user_list_by_scope_id(self, scope_id):
         return self.__fetchall_with_headers(SQL.GET_TOP_USER_LIST_BY_SCOPE_ID, (
             Globals.SEND_AMOUNT, Globals.EARN_AMOUNT, scope_id, Globals.SEND_AMOUNT, Globals.EARN_AMOUNT))
+
+    def get_messages_by_scope_id(self, scope_id):
+        return self.__fetchall_with_headers(SQL.GET_MESSAGES_BY_SCOPE_ID, (scope_id,))

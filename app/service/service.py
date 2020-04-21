@@ -51,11 +51,13 @@ class Service:
         sent_user_list = self.db.get_sent_user_list_by_scope(scope_id)
         received_user_list = self.db.get_received_user_list_by_scope(scope_id)
         top_user_list = self.db.get_top_user_list_by_scope_id(scope_id)
+        messages = self.db.get_messages_by_scope_id(scope_id)
 
         book = pe.Book(filename=file_name)
         book += pe.Sheet(name="Gönderenler", sheet=sent_user_list)
         book += pe.Sheet(name="Alanlar", sheet=received_user_list)
         book += pe.Sheet(name="Puan Sıralaması", sheet=top_user_list)
+        book += pe.Sheet(name="Mesajlar", sheet=messages)
         book.save_as("/tmp/" + file_name)
 
         try:
