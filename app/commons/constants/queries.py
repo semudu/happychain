@@ -15,14 +15,14 @@ class SQL:
 
     # ------------------ USER ------------------ #
     ADD_USER = "insert into user (msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id, role) values (%s,upper(%s),upper(%s),%s,%s,%s,%s,%s);"
-    GET_USER_BY_ID = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where id = %s;"
-    GET_USER_BY_MSISDN = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where msisdn = %s;"
-    GET_USER_ID_BY_MSISDN = "select id from user where msisdn = %s;"
-    GET_USERS_LIKE_NAME = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where first_name like %s;"
+    GET_USER_BY_ID = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where id = %s and active = 1;"
+    GET_USER_BY_MSISDN = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where msisdn = %s and active = 1;"
+    GET_USER_ID_BY_MSISDN = "select id from user where msisdn = %s and active = 1;"
+    GET_USERS_LIKE_NAME = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where first_name like %s and active = 1;"
     DELETE_USER = "update user set active = 0 where id = %s;"
-    GET_USERS_MSISDN_LIST = "select msisdn from user;"
-    GET_BIRTHDAY_USERS = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where dayofmonth(date_of_birth) = dayofmonth(curdate()) and month(date_of_birth) = month(curdate());"
-    GET_SCOPE_USERS_BY_USER_ID_AND_LIKE_NAME = "select u.*, concat(u.first_name, ' ', u.last_name) as full_name from user u where u.id != %s and u.team_id in (select id from team where scope_id = (select s.id from scope s, team t, user u where u.team_id = t.id and t.scope_id = s.id and u.id = %s)) and first_name like %s order by full_name limit %s,%s;"
+    GET_USERS_MSISDN_LIST = "select msisdn from user where active = 1;"
+    GET_BIRTHDAY_USERS = "select u.*, concat(u.first_name,' ', u.last_name) as full_name from user u where dayofmonth(date_of_birth) = dayofmonth(curdate()) and month(date_of_birth) = month(curdate()) and active = 1;"
+    GET_SCOPE_USERS_BY_USER_ID_AND_LIKE_NAME = "select u.*, concat(u.first_name, ' ', u.last_name) as full_name from user u where u.id != %s and u.active = 1 and u.team_id in (select id from team where scope_id = (select s.id from scope s, team t, user u where u.team_id = t.id and t.scope_id = s.id and u.id = %s)) and (first_name like %s or first_name like %s) order by full_name limit %s,%s;"
     GET_TOP_TEN_USER_BY_SCOPE = "select *, (t.total_sent * %s + t.total_received * %s ) total from ( select concat(u.first_name, ' ', u.last_name) full_name, (select count(1) from transaction where sender_id = u.id) total_sent, (select count(1) from transaction where receiver_id = u.id) total_received from user u where team_id in (select id from team where scope_id = %s)) t order by total desc limit 10;"
 
     # ----------------- WALLET ----------------- #
@@ -59,3 +59,4 @@ class SQL:
     GET_SENT_USER_LIST_BY_SCOPE_ID = "select concat(u.first_name, ' ', u.last_name) \"Ad Soyad\", tm.name \"Takım\", count(*) \"Toplam Gönderilen\" from transaction t, user u, team tm where t.is_active = 1 and t.sender_id = u.id and u.team_id = tm.id and sender_id in (select u.id from user u, team t where u.team_id = t.id and t.scope_id = %s) group by sender_id order by count(*) desc"
     GET_RECEIVED_USER_LIST_BY_SCOPE_ID = "select concat(u.first_name, ' ', u.last_name) \"Ad Soyad\", tm.name \"Takım\", count(*) \"Toplam Alınan\" from transaction t, user u, team tm where t.is_active = 1 and t.receiver_id = u.id and u.team_id = tm.id and receiver_id in (select u.id from user u, team t where u.team_id = t.id and t.scope_id = %s) group by receiver_id order by count(*) desc"
     GET_TOP_USER_LIST_BY_SCOPE_ID = "select full_name \"Ad Soyad\", team_name \"Takım\", (t.total_sent * %s + t.total_received * %s) \"Kazanılan\" from (select concat(u.first_name, ' ', u.last_name) full_name, t.name team_name, (select count(1) from transaction where sender_id = u.id) total_sent, (select count(1) from transaction where receiver_id = u.id) total_received from user u, team t where u.team_id = t.id and t.scope_id = %s) t order by (t.total_sent * %s + t.total_received * %s) desc"
+    GET_MESSAGES_BY_SCOPE_ID = "select case when message_id = -1 then t.free_message ->> '$.content' else m.text end Mesaj, count(1) \"Gönderim Sayısı\" from transaction t, message m where t.message_id = m.id and t.is_active = 1 and sender_id in (select u.id from user u, team t where u.team_id = t.id and t.scope_id = %s) group by Mesaj order by count(1) desc"
