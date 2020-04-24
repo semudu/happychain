@@ -1,9 +1,9 @@
-from app.commons.constants.globals import *
+from app.common.constants.globals import *
 from mysql.connector import Error
-from app.commons.log import get_logger
-from app.commons import database, bip
+from app.common.log import get_logger
+from app.common import database, bip
 
-from app.commons.utils import *
+from app.common.utils import *
 import pyexcel as pe
 
 logger = get_logger(__name__)

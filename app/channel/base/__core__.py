@@ -1,12 +1,12 @@
-from app.commons import bip, database
-from app.commons.utils import *
-from app.commons.constants.message import Message
-from app.commons.constants.globals import Globals
-from app.commons.constants.command import Command
+from app.common import bip, database
+from app.common.utils import *
+from app.common.constants.message import Message
+from app.common.constants.globals import Globals
+from app.common.constants.command import Command
 from bipwrapper.type.poll_type import PollType
-from app.commons.cache import Cache, Keys
+from app.common.cache import Cache, Keys
 from bipwrapper.type.ctype import CType
-from app.commons.models.free_message import FreeMessage
+from app.common.models.free_message import FreeMessage
 
 
 def send_message_all(user, ctype, content):

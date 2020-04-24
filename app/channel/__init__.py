@@ -1,11 +1,11 @@
-from app.commons.service import database
-from app.commons.constants.globals import Role
-from app.commons.cache import Cache, Keys
-from app.commons.constants.command import get_command_map
+from app.common.service import database
+from app.common.constants.globals import Role
+from app.common.cache import Cache, Keys
+from app.common.constants.command import get_command_map
 
 from .base.__core__ import send_free_message, send_message_all, send_user_list
 from .base import command_map as base_commands
-from ..commons.models.bip_request import BipRequest
+from ..common.models.bip_request import BipRequest
 
 
 def __non_command(request):
