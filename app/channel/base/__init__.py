@@ -74,25 +74,6 @@ def __send_message_list(request):
                 "OK")
 
 
-def __non_command(request):
-    user = database.get_user_by_msisdn(request.sender)
-    free_msg_target_user_id = Cache.get(Keys.FREE_MSG_BY_USER_ID % user["id"])
-    if free_msg_target_user_id:
-        Cache.delete(Keys.FREE_MSG_BY_USER_ID % user["id"])
-        send_free_message(request.sender, user["id"], free_msg_target_user_id, request.ctype,
-                          request.content)
-    else:
-        if user["role"] in (Role.SCOPE_ADMIN, Role.SUPER_ADMIN):
-            all_msg = Cache.get(Keys.ALL_MSG_BY_USER_ID % user["id"])
-            if all_msg is True:
-                Cache.delete(Keys.ALL_MSG_BY_USER_ID % user["id"])
-                send_message_all(user, request.ctype, request.content)
-            else:
-                send_user_list(request)
-        else:
-            send_user_list(request)
-
-
 def __send_message(request):
     user_id = database.get_user_id_by_msisdn(request.sender)
     if request.extra_param(2) == "%s%s%s" % (user_id, APP.TRANSFER_SECRET, request.extra_param()):
