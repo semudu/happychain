@@ -3,7 +3,7 @@ from app.commons.constants.globals import Role
 from app.commons.cache import Cache, Keys
 from app.commons.constants.command import get_command_map
 
-from .base.core import send_free_message, send_message_all, send_user_list
+from .base.__core__ import send_free_message, send_message_all, send_user_list
 from .base import command_map as base_commands
 from ..commons.models.bip_request import BipRequest
 
