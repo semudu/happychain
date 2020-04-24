@@ -3,23 +3,17 @@ from collections import OrderedDict
 from flask import Blueprint, request, jsonify
 from flask_basicauth import BasicAuth
 
-from app.commons.database import Database
-from app.service.service import Service
-from app.service.channel import Channel
+from app.channel import run_bip_command
+from app.commons.common import import_user_array, database
 from app.commons.log import get_logger
 
 import flask_excel as excel
 
-logger = get_logger(__name__)
-
 api = Blueprint('api', __name__, None)
 api.config = {}
-
-db = Database()
-service = Service()
-bip_channel = Channel()
-
 basic_auth = BasicAuth(api)
+
+logger = get_logger(__name__)
 
 
 @api.record
@@ -37,7 +31,7 @@ def get():
 @basic_auth.required
 def get_team_transactions(team_id, limit):
     try:
-        return jsonify({"result": db.get_received_messages_by_team(team_id, limit)})
+        return jsonify({"result": database.get_received_messages_by_team(team_id, limit)})
     except Exception as e:
         print("Transactions retrieve exception: %s" % str(e))
         return "An error occurred", 500
@@ -51,7 +45,7 @@ def create_scope():
             content = request.get_json()
             scope_name = content["name"]
             if scope_name:
-                scope_id = db.add_scope(scope_name)
+                scope_id = database.add_scope(scope_name)
                 return "Scope Created with id: %s" % scope_id, 201
             else:
                 return "Scope name is empty!", 500
@@ -64,7 +58,7 @@ def create_scope():
 @basic_auth.required
 def get_scopes():
     try:
-        return jsonify({"result": db.get_scopes()})
+        return jsonify({"result": database.get_scopes()})
     except Exception as e:
         print("Team retrieve exception: %s" % str(e))
         return "An error occurred", 500
@@ -79,7 +73,7 @@ def create_team():
             scope_id = content["scope_id"]
             team_name = content["name"]
             if team_name:
-                team_id = db.add_team(team_name, scope_id)
+                team_id = database.add_team(team_name, scope_id)
                 return "Team Created with id: %s" % team_id, 201
             else:
                 return "Team name is empty!", 500
@@ -97,7 +91,7 @@ def update_team(team_id):
             team_name = content["name"]
             scope_id = content["scope_id"]
             if team_name:
-                db.update_team(team_id, team_name, scope_id)
+                database.update_team(team_id, team_name, scope_id)
                 return "Team Updated", 200
             else:
                 return "Team name is empty!", 500
@@ -110,7 +104,7 @@ def update_team(team_id):
 @basic_auth.required
 def delete_team(team_id):
     try:
-        db.delete_team(team_id)
+        database.delete_team(team_id)
         return "Team Deleted.", 200
     except Exception as e:
         print("Team delete exception: %s" % str(e))
@@ -121,7 +115,7 @@ def delete_team(team_id):
 @basic_auth.required
 def get_teams():
     try:
-        return jsonify({"result": db.get_teams()})
+        return jsonify({"result": database.get_teams()})
     except Exception as e:
         print("Team retrieve exception: %s" % str(e))
         return "An error occurred", 500
@@ -134,7 +128,7 @@ def upload_user_list():
         if request.method == "POST":
             user_array = request.get_array(field_name="file")
             if user_array is not None:
-                result = jsonify({"result": service.import_user_array(user_array)})
+                result = jsonify({"result": import_user_array(user_array)})
             else:
                 return "file not found."
 
@@ -165,7 +159,7 @@ def create_user():
             passwd = content["passwd"]
             team_id = content["team_id"]
             if first_name and last_name and gender and date_of_birth and msisdn and passwd and team_id:
-                db.add_user(msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id)
+                database.__add_user(msisdn, first_name, last_name, gender, date_of_birth, passwd, team_id)
                 return "User Created.", 201
             else:
                 return "first_name, last_name, gender, date_of_birth, msisdn, passwd or team_id is empty!", 500
@@ -178,7 +172,7 @@ def create_user():
 @basic_auth.required
 def delete_user(user_id):
     try:
-        db.delete_user(user_id)
+        database.delete_user(user_id)
         return "User Deleted.", 200
     except Exception as e:
         print("User delete exception: %s" % str(e))
@@ -189,7 +183,7 @@ def delete_user(user_id):
 @basic_auth.required
 def get_users():
     try:
-        return jsonify({"result": db.get_users()})
+        return jsonify({"result": database.get_users()})
     except Exception as e:
         print("Team create exception: %s" % str(e))
         return "An error occurred", 500
@@ -199,7 +193,7 @@ def get_users():
 def bip_process():
     try:
         if request.is_json:
-            t = threading.Thread(target=bip_channel.run_command, args=(request.get_json(),))
+            t = threading.Thread(target=run_bip_command, args=(request.get_json(),))
             t.start()
         return "", 200
 
