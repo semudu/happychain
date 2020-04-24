@@ -1,8 +1,8 @@
 from bipwrapper.model.request import Request
 from bipwrapper.type.ctype import CType
-from app.commons.utils import split_to_array
-from app.commons.constants.globals import Globals
-from app.commons.constants.command import Command
+from app.common.utils import split_to_array
+from app.common.constants.globals import Globals
+from app.common.constants.command import Command
 
 
 class BipRequest(Request):

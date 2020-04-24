@@ -7,13 +7,13 @@ import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
 
-from app.commons.utils import hash_password, convert_to_date
-from app.commons.constants.globals import *
-from app.commons.models.free_message import FreeMessage
-from app.commons.constants.queries import SQL
-from app.commons.cache import *
+from app.common.utils import hash_password, convert_to_date
+from app.common.constants.globals import *
+from app.common.models.free_message import FreeMessage
+from app.common.constants.queries import SQL
+from app.common.cache import *
 
-from app.commons.log import get_logger
+from app.common.log import get_logger
 
 logger = get_logger(__name__)
 
