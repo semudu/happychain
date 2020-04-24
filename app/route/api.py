@@ -3,8 +3,9 @@ from collections import OrderedDict
 from flask import Blueprint, request, jsonify
 from flask_basicauth import BasicAuth
 
+from app.common import database
 from app.channel import run_bip_command
-from app.common.service import import_user_array, database
+from app.common.service import import_user_array
 from app.common.log import get_logger
 
 import flask_excel as excel
