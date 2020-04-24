@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 from flask_basicauth import BasicAuth
 
 from app.channel import run_bip_command
-from app.commons.common import import_user_array, database
+from app.commons.service import import_user_array, database
 from app.commons.log import get_logger
 
 import flask_excel as excel
