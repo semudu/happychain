@@ -1,18 +1,12 @@
 from app.commons.constants.globals import *
 from mysql.connector import Error
 from app.commons.log import get_logger
-from app.commons.database import Database
-from bipwrapper import BipWrapper
-
-from config import BIP
+from app.commons import database, bip
 
 from app.commons.utils import *
 import pyexcel as pe
 
 logger = get_logger(__name__)
-
-database = Database()
-bip = BipWrapper(BIP.ENVIRONMENT, BIP.USERNAME, BIP.PASSWORD)
 
 
 def import_user_array(user_array):

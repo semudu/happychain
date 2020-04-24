@@ -1,5 +1,5 @@
+from app.commons import bip, database
 from app.commons.utils import *
-from app.commons.service import bip, database
 from app.commons.constants.message import Message
 from app.commons.constants.globals import Globals
 from app.commons.constants.command import Command
