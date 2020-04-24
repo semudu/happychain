@@ -20,7 +20,9 @@ class Command:
 
 EXTRA_COMMANDS = {
     Command.HELP: ["!!", "!y", "!yardım", "!yardim"],
-    Command.MENU: ["!m", "!menu", "!menü"]
+    Command.MENU: ["!m", "!menu", "!menü"],
+    Command.POINT: ["!puan", "!bakiye"],
+    Command.GET_TRANSACTION_REPORT: ["!rapor"]
 }
 
 
