@@ -28,12 +28,16 @@ def __exist_cached_transaction(request, user):
             send_message_all(user, request.ctype, request.content)
             return True
 
-        target_user_id = Cache.get(Keys.SHARE_OWNER_CHOICE_BY_USER_ID % user_id)
-        if target_user_id != Globals.OTHER_USERS:
-            share_content(request, user_id, target_user_id)
+        share_owner_choice = Cache.get(Keys.SHARE_OWNER_CHOICE_BY_USER_ID % user_id)
+        if share_owner_choice is True:
+            Cache.delete(Keys.SHARE_OWNER_CHOICE_BY_USER_ID % user_id)
+            share_user_list(request)
             return True
-        else:
-            Cache.put(Keys.START_CACHED_TRANSACTION_BY_USER_ID % user_id, True)
+
+        share_user_id = Cache.get(Keys.SHARE_A_CONTENT_BY_USER_ID % user_id)
+        if share_user_id is not None:
+            Cache.delete(Keys.SHARE_A_CONTENT_BY_USER_ID % user_id)
+            share_content(request, user_id, share_user_id)
 
     return False
 

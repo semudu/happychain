@@ -65,8 +65,7 @@ def send_ext_user_list(msisdn, user_id, start_with, offset: int, user_list=None)
         "OK")
 
 
-def share_content(request: BipRequest, user_id, target_user_id):
-    Cache.delete(Keys.SHARE_OWNER_CHOICE_BY_USER_ID % user_id)
+def share_content(request: BipRequest, user_id, share_user_id):
     if request.ctype == CType.TEXT:
         pass
     # TODO

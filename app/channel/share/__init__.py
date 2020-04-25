@@ -26,7 +26,7 @@ def __share_owner_choice(request: BipRequest):
     if target_user_id != Globals.OTHER_USERS:
         initialize_share_a_content(request.sender, user_id, target_user_id)
     else:
-        Cache.put(Keys.SHARE_OWNER_CHOICE_BY_USER_ID % user_id, Globals.OTHER_USERS)
+        Cache.put(Keys.SHARE_OWNER_CHOICE_BY_USER_ID % user_id, True)
         bip.single.send_text_message(request.sender, Message.SHARE_SEARCH_USER)
 
     Cache.put(Keys.START_CACHED_TRANSACTION_BY_USER_ID % user_id, True)
