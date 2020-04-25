@@ -160,6 +160,9 @@ class Database:
     def get_scopes(self):
         return self.__fetchall(SQL.GET_SCOPES)
 
+    def get_scope_admins(self):
+        return self.__fetchall(SQL.GET_SCOPE_ADMINS)
+
     def get_scope_by_user_id(self, user_id):
         result = self.__fetchall(SQL.GET_SCOPE_BY_USER_ID, (user_id,))
         return result[0] if len(result) > 0 else -1
@@ -385,3 +388,6 @@ class Database:
 
     def get_messages_by_scope_id(self, scope_id):
         return self.__fetchall_with_headers(SQL.GET_MESSAGES_BY_SCOPE_ID, (scope_id,))
+
+    def get_most_sent_4_user_by_user_id(self, user_id):
+        return self.__fetchall(SQL.MOST_SENT_4_USER_BY_USER_ID, (user_id,))

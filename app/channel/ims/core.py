@@ -1,7 +1,7 @@
 from app.common import bip, database
 from app.common.utils import *
 from app.common.constants.message import Message
-from app.common.constants.globals import Globals
+from app.common.constants.globals import Globals, Role
 from app.common.constants.command import Command
 from bipwrapper.type.poll_type import PollType
 from app.common.cache import Cache, Keys
@@ -10,15 +10,16 @@ from app.common.models.free_message import FreeMessage
 
 
 def send_message_all(user, ctype, content):
-    if len(content) > 5:
-        receivers = list(map(lambda receiver: receiver["msisdn"],
-                             database.get_scope_users_by_user_id_and_like_name(user["id"])))
-        if ctype == CType.TEXT:
-            bip.multi.send_text_message(receivers, content)
+    if user["role"] in (Role.SCOPE_ADMIN, Role.SUPER_ADMIN):
+        if len(content) > 5:
+            receivers = list(map(lambda receiver: receiver["msisdn"],
+                                 database.get_scope_users_by_user_id_and_like_name(user["id"])))
+            if ctype == CType.TEXT:
+                bip.multi.send_text_message(receivers, content)
 
-        bip.single.send_text_message(user["msisdn"], "Mesajın tüm kullanıcılara gönderildi.")
-    else:
-        bip.single.send_text_message(user["msisdn"], "Toplu mesaj iptal edildi.")
+            bip.single.send_text_message(user["msisdn"], "Mesajın tüm kullanıcılara gönderildi.")
+        else:
+            bip.single.send_text_message(user["msisdn"], "Toplu mesaj iptal edildi.")
 
 
 def send_user_list(request):
@@ -32,12 +33,8 @@ def send_user_list(request):
             size = len(user_list)
             if size > 0:
                 if size > 1:
-                    send_multi_user_list(request.sender, user_id, start_with, 0, user_list)
+                    send_ext_user_list(request.sender, user_id, start_with, 0, user_list)
                 else:
-                    yes_no_tuple = [
-                        (user_list[0]["id"], "Evet"),
-                        (Globals.NO, "Hayır")
-                    ]
                     bip.single.send_poll_message(
                         request.sender,
                         Command.MESSAGE_LIST,
@@ -46,7 +43,7 @@ def send_user_list(request):
                         Message.SHORT_LIST_IMAGE,
                         1,
                         PollType.SINGLE_CHOOSE,
-                        yes_no_tuple,
+                        get_yes_no_tuple(user_list[0]["id"]),
                         "OK")
             else:
                 bip.single.send_text_message(request.sender, Message.NOT_FOUND % start_with)
@@ -54,7 +51,7 @@ def send_user_list(request):
         bip.single.send_text_message(request.sender, Message.INSUFFICIENT_FUNDS)
 
 
-def send_multi_user_list(msisdn, user_id, start_with, offset: int, user_list=None):
+def send_ext_user_list(msisdn, user_id, start_with, offset: int, user_list=None):
     if user_list is None:
         user_list = database.get_scope_users_by_user_id_and_like_name(user_id, start_with, offset, 7)
 
@@ -83,6 +80,7 @@ def send_free_message(msisdn, user_id, target_user_id, msg_type, message):
     if not message.strip():
         bip.single.send_text_message(msisdn, "Birşeyler yazabilirsin bence 😄")
     else:
+        Cache.delete(Keys.FREE_MSG_BY_USER_ID % user_id)
         if msg_type == CType.TEXT:
             database.transfer_points(user_id, target_user_id, Globals.FREE_MSG_ID,
                                      FreeMessage(msg_type, message).get_json_str())

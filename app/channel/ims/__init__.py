@@ -1,9 +1,8 @@
 from bipwrapper.type.button_type import ButtonType
-from app.common.constants.globals import *
 from app.common.log import get_logger
 from config import APP
 from app.common.service import get_report_file_info
-from .__core__ import *
+from .core import *
 
 logger = get_logger(__name__)
 
@@ -52,7 +51,7 @@ def __send_message_list(request):
         bip.single.send_text_message(request.sender, Message.QUICK_REPLY_NO)
         Cache.delete(Keys.QUICK_REPLY_BY_USER_IDS % (target_user_id, user_id))
     elif target_user_id == Globals.OTHER_USERS:  # User list next page
-        send_multi_user_list(request.sender, user_id, request.extra_param(), int(request.extra_param(2)))
+        send_ext_user_list(request.sender, user_id, request.extra_param(), int(request.extra_param(2)))
     else:
         message_list = database.get_message_list_by_user_id(target_user_id)
         if len(message_list) > 0:
@@ -101,6 +100,7 @@ def __send_message(request):
                     finish_transaction_message(request.sender, user_id, target_user, message, balance)
                 else:
                     Cache.put(Keys.FREE_MSG_BY_USER_ID % user_id, target_user["id"])
+                    Cache.put(Keys.START_CACHED_TRANSACTION_BY_USER_ID % user_id, True)
                     bip.single.send_text_message(request.sender,
                                                  Message.FREE_MESSAGE % target_user["first_name"])
 
@@ -137,6 +137,7 @@ def __start_send_all_transaction(request):
     user = database.get_user_by_msisdn(request.sender)
     if user["role"] in [Role.SCOPE_ADMIN, Role.SUPER_ADMIN]:
         Cache.put(Keys.ALL_MSG_BY_USER_ID % user["id"], True)
+        Cache.put(Keys.START_CACHED_TRANSACTION_BY_USER_ID % user["id"], True)
         bip.single.send_text_message(request.sender,
                                      "Yazacağın ilk mesaj sorumluluğundaki tüm kullanıcılara gönderilecek.")
 
@@ -166,6 +167,7 @@ command_map = {
     Command.LAST_SENT: __send_last_n_sent,
     Command.LAST_RECEIVED: __send_last_n_received,
     Command.MESSAGE_LIST: __send_message_list,
+    Command.IMS_EXT_MESSAGE_LIST: __send_message_list,
     Command.FINISH_TRANSACTION: __send_message,
     Command.TRANSACTION_COUNT: __send_transaction_count,
     Command.TOP_TEN: __send_top_ten,

@@ -2,12 +2,14 @@ from collections import defaultdict
 
 
 class Command:
+    # == BASE CHANNEL == #
     HELP = "__help"
     MENU = "__menu"
     POINT = "__point"
     LAST_SENT = "__last_sent"
     LAST_RECEIVED = "__last_received"
     MESSAGE_LIST = "__message_list"
+    IMS_EXT_MESSAGE_LIST = "__ims_ext_message_list"
     FINISH_TRANSACTION = "__finish_transaction"
     QUICK_REPLY = "__quick_reply"
     TRANSACTION_COUNT = "__transaction_count"
@@ -17,12 +19,20 @@ class Command:
     ADD_USER = "__add_user"
     REMOVE_USER = "__remove_user"
 
+    # == SHARE CHANNEL == #
+    SHARE_START = "__share_start"
+    SHARE_OWNER_CHOICE = "__share_owner_choise"
+    INITIALIZE_SHARE_A_CONTENT = "__initialize_share_a_content"
+
 
 EXTRA_COMMANDS = {
+    # == BASE CHANNEL == #
     Command.HELP: ["!!", "!y", "!yardım", "!yardim"],
     Command.MENU: ["!m", "!menu", "!menü"],
     Command.POINT: ["!puan", "!bakiye"],
-    Command.GET_TRANSACTION_REPORT: ["!rapor"]
+    Command.GET_TRANSACTION_REPORT: ["!rapor"],
+    # == SHARE CHANNEL == #
+    Command.SHARE_START: ["!p", "!paylaş", "!paylas"]
 }
 
 

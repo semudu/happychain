@@ -4,6 +4,8 @@ import hashlib
 import os
 import re
 
+from app.common.constants.globals import Globals
+
 
 def hash_password(password):
     """hash a password for storing."""
@@ -91,3 +93,10 @@ def is_after_minutes(date, minutes):
 
 def now(fmt="%d.%m.%Y %H:%M:%S.%f"):
     return datetime.datetime.now().strftime(fmt)
+
+
+def get_yes_no_tuple(yes_id):
+    return [
+        (yes_id, "Evet"),
+        (Globals.NO, "Hayır")
+    ]

@@ -11,6 +11,9 @@ class Keys:
     FREE_MSG_BY_USER_ID = "free_message--user_id:%s"
     ALL_MSG_BY_USER_ID = "all_message--user_id:%s"
     QUICK_REPLY_BY_USER_IDS = "quick_reply--user_ids:%s-%s"
+    SHARE_OWNER_CHOICE_BY_USER_ID = "share_owner_choise--user_id:%s"
+    SHARE_A_CONTENT_BY_USER_ID = "share_a_content--user_id:%s"
+    START_CACHED_TRANSACTION_BY_USER_ID = "start_cached_transaction--user_id:%s"
 
 
 class Cache:

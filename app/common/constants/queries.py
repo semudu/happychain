@@ -4,6 +4,7 @@ class SQL:
     UPDATE_SCOPE = "update scope set name = %s where id = %s;"
     DELETE_SCOPE = "delete from scope where id = %s;"
     GET_SCOPES = "select * from scope;"
+    GET_SCOPE_ADMINS = "select u.id, u.msisdn, t.scope_id, s.name scope_name from user u, team t, scope s where u.team_id = t.id and s.id = t.scope_id and role = 'SCOPE_ADMIN'"
     GET_SCOPE_BY_USER_ID = "select s.* from scope s, team t, user u where t.scope_id = s.id and u.team_id = t.id and u.id = %s;"
 
     # ------------------ TEAM ------------------ #
@@ -48,6 +49,7 @@ class SQL:
     ARCHIVE_ACTIVE_TRANSACTIONS = "insert into transaction_archive (date, archive_date, sender_id, receiver_id, message_id, free_message, amount) select date, curdate(), sender_id, receiver_id, message_id, free_message, amount from transaction where is_active = 1;"
     GET_TRANSACTION_COUNT_BY_SCOPE = "select count(*) from transaction t where t.is_active = 1 and sender_id in ( select u.id from user u, team t where u.team_id = t.id and t.scope_id = %s)"
     TRUNCATE_TRANSACTIONS = "truncate table transaction;"
+    MOST_SENT_4_USER_BY_USER_ID = "select t.receiver_id, concat(u.first_name, ' ', u.last_name) full_name, count(1) c from happychain.transaction t, happychain.user u where t.receiver_id = u.id and u.active = 1 and  t.sender_id=%s and t.is_active=1 group by receiver_id order by c desc limit 4"
 
     # --------------- MESSAGE --------------- #
     GET_MESSAGE_BY_ID = "select text from message where id = %s;"
