@@ -67,8 +67,6 @@ def get_name_with_suffix(name) -> str:
         else:
             return "%s'e" % name
 
-    return name
-
 
 def get_name_with_own_suffix(name) -> str:
     vowels = 'aıouAIOUeiöüEİÖÜ'
@@ -83,8 +81,6 @@ def get_name_with_own_suffix(name) -> str:
             return "%s' ın" % name
         else:
             return "%s' in" % name
-
-    return name
 
 
 def is_after_minutes(date, minutes):
