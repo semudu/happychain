@@ -4,7 +4,7 @@ from bipwrapper.type.ctype import CType
 
 class MessageContent:
     def __init__(self, ctype: CType, content):
-        self.type = ctype
+        self.type = ctype.value
         self.content = content
 
     def to_json(self):

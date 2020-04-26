@@ -83,8 +83,8 @@ def send_free_message(msisdn, user_id, target_user_id, msg_type, message):
     else:
         Cache.delete(Keys.FREE_MSG_BY_USER_ID % user_id)
         if msg_type == CType.TEXT:
-            database.transfer_points(user_id, target_user_id, Globals.FREE_MSG_ID,
-                                     MessageContent(msg_type, message), MessageType.IMS)
+            database.transfer_points(user_id, target_user_id, Globals.FREE_MSG_ID, MessageType.IMS,
+                                     MessageContent(msg_type, message))
 
             target_user = database.get_user_by_id(target_user_id)
             balance = database.get_balance_by_user_id(user_id)
