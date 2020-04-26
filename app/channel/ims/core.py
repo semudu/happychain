@@ -7,7 +7,7 @@ from app.common.constants.command import Command
 from bipwrapper.type.poll_type import PollType
 from app.common.cache import Cache, Keys
 from bipwrapper.type.ctype import CType
-from app.common.models.free_message import FreeMessage
+from app.common.models.message_content import MessageContent
 
 
 def send_message_all(user, ctype, content):
@@ -84,7 +84,7 @@ def send_free_message(msisdn, user_id, target_user_id, msg_type, message):
         Cache.delete(Keys.FREE_MSG_BY_USER_ID % user_id)
         if msg_type == CType.TEXT:
             database.transfer_points(user_id, target_user_id, Globals.FREE_MSG_ID,
-                                     FreeMessage(msg_type, message).get_json_str(), MessageType.IMS)
+                                     MessageContent(msg_type, message), MessageType.IMS)
 
             target_user = database.get_user_by_id(target_user_id)
             balance = database.get_balance_by_user_id(user_id)

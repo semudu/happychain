@@ -1,5 +1,6 @@
 from decimal import *
 
+from app.common.models.message_content import MessageContent
 from app.common.models.message_type import MessageType
 from config import DB
 
@@ -296,14 +297,16 @@ class Database:
         result = self.__fetchone(SQL.GET_BALANCE_BY_USER_ID, (user_id,))
         return Decimal(result) if result else 0
 
-    def transfer_points(self, sender_id, receiver_id, message_id, message_type: MessageType, content=None):
+    def transfer_points(self, sender_id, receiver_id, message_id, message_type: MessageType,
+                        content: MessageContent = None):
         try:
             conn = self.connection_pool.get_connection()
 
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
                 cursor.execute(SQL.ADD_TRANSACTION,
-                               (sender_id, receiver_id, Globals.SEND_AMOUNT, message_id, content, message_type.value))
+                               (sender_id, receiver_id, Globals.SEND_AMOUNT, message_id,
+                                content.to_json() if content is not None else None, message_type.value))
                 cursor.execute(SQL.REMOVE_BALANCE_BY_USER, ((Globals.SEND_AMOUNT - Globals.EARN_AMOUNT), sender_id))
                 cursor.execute(SQL.ADD_BALANCE_BY_USER, (Globals.SEND_AMOUNT, receiver_id))
                 conn.commit()

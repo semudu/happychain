@@ -7,10 +7,10 @@ class MessageContent:
         self.type = ctype
         self.content = content
 
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__)
+
     @classmethod
     def from_json(cls, json_str):
         obj = json.loads(json_str)
         return cls(CType(obj["type"]), obj["content"])
-
-    def get_json_str(self):
-        return '{"type": "%s", "content": "%s"}' % (self.type.value, self.content)
