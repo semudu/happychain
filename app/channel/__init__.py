@@ -2,14 +2,14 @@ from app.common import database
 from app.common.cache import Cache, Keys
 from app.common.constants.command import get_command_map
 from app.common.models.bip_request import BipRequest
-from test import MessageContent
 
-from .ims.core import send_free_message, send_message_all, send_user_list as ims_user_list
+from .ims.core import send_message_all, send_user_list as ims_user_list
 from .share.core import share_content, send_user_list as share_user_list
 from .ims import command_map as ims_commands, finish_transaction_message
 from .share import command_map as share_commands
 from .admin import command_map as admin_commands
 from ..common.constants.globals import Globals
+from ..common.models.message_content import MessageContent
 
 
 def __exist_cached_transaction(request, user):
