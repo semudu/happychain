@@ -7,6 +7,7 @@ from .ims.core import send_free_message, send_message_all, send_user_list as ims
 from .share.core import share_content, send_user_list as share_user_list
 from .ims import command_map as ims_commands
 from .share import command_map as share_commands
+from .admin import command_map as admin_commands
 
 
 def __exist_cached_transaction(request, user):
@@ -48,6 +49,7 @@ def __non_command(request):
 
 
 __command_map = get_command_map(__non_command, {
+    **admin_commands,
     **ims_commands,
     **share_commands})
 

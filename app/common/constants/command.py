@@ -9,9 +9,10 @@ class Command:
     LAST_SENT = "__last_sent"
     LAST_RECEIVED = "__last_received"
     MESSAGE_LIST = "__message_list"
-    IMS_EXT_MESSAGE_LIST = "__ims_ext_message_list"
     FINISH_TRANSACTION = "__finish_transaction"
     QUICK_REPLY = "__quick_reply"
+
+    # == ADMIN COMMANDS == #
     TRANSACTION_COUNT = "__transaction_count"
     TOP_TEN = "__top_ten"
     SEND_MESSAGE_ALL = "__send_message_all"
