@@ -1,5 +1,6 @@
 from decimal import *
 
+from app.common.models.message_type import MessageType
 from config import DB
 
 import json
@@ -9,7 +10,6 @@ from mysql.connector import pooling
 
 from app.common.utils import hash_password, convert_to_date
 from app.common.constants.globals import *
-from app.common.models.free_message import FreeMessage
 from app.common.constants.queries import SQL
 from app.common.cache import *
 
@@ -29,7 +29,6 @@ class Database:
                                                                                charset="utf8",
                                                                                pool_size=5,
                                                                                pool_reset_session=True)
-
 
         except Error as e:
             print("Error while connecting to MySQL", e)
@@ -277,6 +276,14 @@ class Database:
 
         return messages
 
+    def get_share_message_list_by_scope_id(self, scope_id):
+        messages = Cache.get(Keys.SHARE_MESSAGE_LIST_BY_SCOPE_ID % scope_id)
+        if messages is None:
+            messages = self.__fetchall(SQL.GET_SHARE_MESSAGE_LIST_BY_SCOPE_ID, (scope_id))
+            Cache.put(Keys.SHARE_MESSAGE_LIST_BY_SCOPE_ID % scope_id, messages)
+
+        return messages
+
     def get_message_by_id(self, message_id):
         message = Cache.get(Keys.MESSAGE_BY_ID % message_id)
         if message is None:
@@ -289,14 +296,14 @@ class Database:
         result = self.__fetchone(SQL.GET_BALANCE_BY_USER_ID, (user_id,))
         return Decimal(result) if result else 0
 
-    def transfer_points(self, sender_id, receiver_id, message_id, free_message=None):
+    def transfer_points(self, sender_id, receiver_id, message_id, message_type: MessageType, content=None):
         try:
             conn = self.connection_pool.get_connection()
 
             if conn.is_connected():
                 cursor = conn.cursor(prepared=True)
                 cursor.execute(SQL.ADD_TRANSACTION,
-                               (sender_id, receiver_id, Globals.SEND_AMOUNT, message_id, free_message))
+                               (sender_id, receiver_id, Globals.SEND_AMOUNT, message_id, content, message_type.value))
                 cursor.execute(SQL.REMOVE_BALANCE_BY_USER, ((Globals.SEND_AMOUNT - Globals.EARN_AMOUNT), sender_id))
                 cursor.execute(SQL.ADD_BALANCE_BY_USER, (Globals.SEND_AMOUNT, receiver_id))
                 conn.commit()
@@ -326,18 +333,6 @@ class Database:
 
     def get_special_dates(self):
         return self.__fetchall(SQL.GET_SPECIAL_DATES)
-
-    def check_free_message(self, user_id):
-        last_transaction = self.__fetchall(SQL.GET_USER_LAST_TRANSACTION_BY_EMPTY_MESSAGE_TODAY, (user_id,))
-        if last_transaction:
-            return last_transaction[0]
-        return None
-
-    def insert_free_message(self, transaction, msg_type, message):
-        free_msg = FreeMessage(msg_type, message).get_json_str()
-        self.__execute(SQL.UPDATE_FREE_MESSAGE, (free_msg, transaction["id"]), False)
-
-        return transaction
 
     def load_balance_user(self, user_id, amount):
         return self.__execute(SQL.ADD_BALANCE_BY_USER, (amount, user_id), False)

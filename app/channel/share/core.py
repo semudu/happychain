@@ -66,6 +66,19 @@ def send_ext_user_list(msisdn, user_id, start_with, offset: int, user_list=None)
 
 
 def share_content(request: BipRequest, user_id, share_user_id):
-    if request.ctype == CType.TEXT:
-        pass
-    # TODO
+    if request.ctype in [CType.TEXT, CType.PHOTO, CType.VIDEO]:
+        scope_id = database.get_scope_id_by_user_id(user_id)
+        scope_users = database.get_scope_users_by_user_id_and_like_name(user_id)
+        messages = database.get_share_message_list_by_scope_id(scope_id)
+
+        for target_user in scope_users:
+            target_user_id = target_user["id"]
+            if target_user_id != user_id and target_user_id != share_user_id:
+                if request.ctype == CType.TEXT:
+                    pass
+                    # TODO
+
+    else:
+        bip.single.send_text_message(request.sender, "Yazı, Fotoğraf ya da Video paylaşabilirsin.")
+
+# TODO

@@ -2,9 +2,9 @@ import json
 from bipwrapper.type.ctype import CType
 
 
-class FreeMessage:
-    def __init__(self, message_type, content):
-        self.type = message_type
+class MessageContent:
+    def __init__(self, ctype: CType, content):
+        self.type = ctype
         self.content = content
 
     @classmethod

@@ -1,5 +1,4 @@
 from app.common import database
-from app.common.constants.globals import Globals
 from app.common.cache import Cache, Keys
 from app.common.constants.command import get_command_map
 from app.common.models.bip_request import BipRequest

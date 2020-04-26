@@ -1,4 +1,5 @@
 from app.common import bip, database
+from app.common.models.message_type import MessageType
 from app.common.utils import *
 from app.common.constants.message import Message
 from app.common.constants.globals import Globals, Role
@@ -83,7 +84,7 @@ def send_free_message(msisdn, user_id, target_user_id, msg_type, message):
         Cache.delete(Keys.FREE_MSG_BY_USER_ID % user_id)
         if msg_type == CType.TEXT:
             database.transfer_points(user_id, target_user_id, Globals.FREE_MSG_ID,
-                                     FreeMessage(msg_type, message).get_json_str())
+                                     FreeMessage(msg_type, message).get_json_str(), MessageType.IMS)
 
             target_user = database.get_user_by_id(target_user_id)
             balance = database.get_balance_by_user_id(user_id)

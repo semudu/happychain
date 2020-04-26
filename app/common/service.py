@@ -1,4 +1,3 @@
-from app.common.constants.globals import *
 from mysql.connector import Error
 from app.common.log import get_logger
 from app.common import database, bip

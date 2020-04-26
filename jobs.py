@@ -24,8 +24,8 @@ def load_balance_job():
             receivers = list(map(lambda msisdn: msisdn["msisdn"], database.get_all_msisdn_list()))
             bip.multi.send_text_message(receivers, Message.LOAD_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
 
-    except Exception as e:
-        logger.error("An error occured in load balance job: " + str(e))
+    except Exception as error:
+        logger.error("An error occured in load balance job: " + str(error))
 
 
 def reset_balance_job():
@@ -40,8 +40,8 @@ def reset_balance_job():
             receivers = list(map(lambda msisdn: msisdn["msisdn"], database.get_all_msisdn_list()))
             bip.multi.send_text_message(receivers, Message.RESET_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
 
-    except Exception as e:
-        logger.error("An error occured in reset balance job: " + str(e))
+    except Exception as error:
+        logger.error("An error occured in reset balance job: " + str(error))
 
 
 def special_dates_job():
@@ -58,8 +58,8 @@ def special_dates_job():
                     for message in content["messages"]:
                         bip.single.send_text_message(receiver, message)
 
-    except Exception as e:
-        logger.error("An error occured in special date job: " + str(e))
+    except Exception as error:
+        logger.error("An error occured in special date job: " + str(error))
 
 
 def birthday_job():
@@ -98,22 +98,22 @@ def birthday_job():
                                                          user["first_name"], Globals.LOAD_BALANCE_AMOUNT))
                         database.load_balance_user(user["id"], Globals.LOAD_BALANCE_AMOUNT)
 
-    except Exception as e:
-        logger.error("An error occured in birthday job: " + str(e))
+    except Exception as error:
+        logger.error("An error occured in birthday job: " + str(error))
 
 
 def reminder_job():
     try:
         logger.debug("send reminder to deactive users")
-    except Exception as e:
-        logger.error("An error occured in reminder job: " + str(e))
+    except Exception as error:
+        logger.error("An error occured in reminder job: " + str(error))
 
 
 def clear_cache():
     try:
         Cache.clear()
-    except Exception as e:
-        logger.error("An error occured in clear cache job: " + str(e))
+    except Exception as error:
+        logger.error("An error occured in clear cache job: " + str(error))
 
 
 if __name__ == "__main__":

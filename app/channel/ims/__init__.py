@@ -93,7 +93,7 @@ def __send_message(request):
                 target_user = database.get_user_by_id(target_user_id)
 
                 if message_id != Globals.FREE_MSG_ID:
-                    database.transfer_points(user_id, target_user_id, message_id)
+                    database.transfer_points(user_id, target_user_id, message_id, MessageType.IMS)
                     message = database.get_message_by_id(message_id)
                     balance = database.get_balance_by_user_id(user_id)
 

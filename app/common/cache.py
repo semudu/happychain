@@ -7,6 +7,7 @@ class Keys:
     USER_BY_ID = "user--user_id:%s"
     USER_BY_MSISDN = "user--msisdn:%s"
     MESSAGE_LIST_BY_USER_ID = "message_list--user_id:%s"
+    SHARE_MESSAGE_LIST_BY_SCOPE_ID = "share_message_list--scope_id:%s"
     MESSAGE_BY_ID = "message-message_id:%s"
     FREE_MSG_BY_USER_ID = "free_message--user_id:%s"
     ALL_MSG_BY_USER_ID = "all_message--user_id:%s"

@@ -14,6 +14,7 @@ class Globals:
     DEFAULT_PASSWD = "123456"
     DELIMITER = ":::"
     FREE_MSG_ID = -1
+    FREE_SHARE_MSG_ID = -11
     OTHER_USERS = -2
     NO = -3
 
