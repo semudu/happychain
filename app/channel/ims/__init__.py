@@ -88,20 +88,14 @@ def __send_message(request):
                                              Message.SAME_TEAM_LIMIT % Globals.SEND_SAME_TEAM_LIMIT)
                 return
             else:
-
                 target_user = database.get_user_by_id(target_user_id)
-
-                if message_id != Globals.FREE_MSG_ID:
-                    database.transfer_points(user_id, target_user_id, message_id, MessageType.IMS)
-                    message = database.get_message_by_id(message_id)
-                    balance = database.get_balance_by_user_id(user_id)
-
-                    finish_transaction_message(request.sender, user_id, target_user, message, balance)
-                else:
-                    Cache.put(Keys.FREE_MSG_BY_USER_ID % user_id, target_user["id"])
+                if message_id == Globals.FREE_MSG_ID:
+                    Cache.put(Keys.FREE_MSG_BY_USER_ID % user_id, target_user_id)
                     Cache.put(Keys.START_CACHED_TRANSACTION_BY_USER_ID % user_id, True)
                     bip.single.send_text_message(request.sender,
                                                  Message.FREE_MESSAGE % target_user["first_name"])
+                else:
+                    finish_transaction_message(request.sender, user_id, target_user_id, message_id, balance)
 
         else:
             bip.single.send_text_message(request.sender, Message.INSUFFICIENT_FUNDS)

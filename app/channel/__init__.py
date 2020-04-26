@@ -2,12 +2,14 @@ from app.common import database
 from app.common.cache import Cache, Keys
 from app.common.constants.command import get_command_map
 from app.common.models.bip_request import BipRequest
+from test import MessageContent
 
 from .ims.core import send_free_message, send_message_all, send_user_list as ims_user_list
 from .share.core import share_content, send_user_list as share_user_list
-from .ims import command_map as ims_commands
+from .ims import command_map as ims_commands, finish_transaction_message
 from .share import command_map as share_commands
 from .admin import command_map as admin_commands
+from ..common.constants.globals import Globals
 
 
 def __exist_cached_transaction(request, user):
@@ -18,8 +20,9 @@ def __exist_cached_transaction(request, user):
 
         free_message_user_id = Cache.get(Keys.FREE_MSG_BY_USER_ID % user_id)
         if free_message_user_id:
-            send_free_message(request.sender, user_id, free_message_user_id, request.ctype,
-                              request.content)
+            Cache.delete(Keys.FREE_MSG_BY_USER_ID % user_id)
+            finish_transaction_message(request.sender, user_id, free_message_user_id, Globals.FREE_MSG_ID,
+                                       MessageContent(request.ctype, request.content))
             return True
 
         all_msg = Cache.get(Keys.ALL_MSG_BY_USER_ID % user_id)

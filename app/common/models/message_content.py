@@ -7,6 +7,10 @@ class MessageContent:
         self.type = ctype.value
         self.content = content
 
+    @property
+    def message(self):
+        return self.content
+
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__)
 
