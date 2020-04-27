@@ -112,6 +112,7 @@ def finish_transaction_message(msisdn, user_id, target_user_id, message_id, cont
     balance = database.get_balance_by_user_id(user_id)
     bip.single.send_text_message(msisdn, Message.SENT_MESSAGE
                                  % (get_name_with_suffix(target_user["first_name"]),
+                                    get_ctype_turkish(content.ctype if content else None),
                                     Globals.SEND_AMOUNT,
                                     Globals.EARN_AMOUNT,
                                     "{:.{}f}".format(balance, 2)))
@@ -122,7 +123,9 @@ def finish_transaction_message(msisdn, user_id, target_user_id, message_id, cont
         bip.single.send_text_message(
             target_user["msisdn"],
             Message.QUICK_REPLY_TITLE % (
-                get_de_da_suffix(user["full_name"]), Globals.SEND_AMOUNT))
+                get_de_da_suffix(user["full_name"]),
+                get_ctype_turkish(content.ctype if content else None),
+                Globals.SEND_AMOUNT))
         Cache.delete(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"]))
     else:
         yes_no_tuple = [
@@ -133,7 +136,9 @@ def finish_transaction_message(msisdn, user_id, target_user_id, message_id, cont
         bip.single.send_poll_message_without_image(
             target_user["msisdn"],
             Command.QUICK_REPLY,
-            Message.QUICK_REPLY_TITLE % (user["full_name"], Globals.SEND_AMOUNT),
+            Message.QUICK_REPLY_TITLE % (capitalize_each_word(user["full_name"]),
+                                         get_ctype_turkish(content.ctype if content else None),
+                                         Globals.SEND_AMOUNT),
             Message.QUICK_REPLY_DESC,
             PollType.SINGLE_CHOOSE,
             yes_no_tuple,

@@ -4,6 +4,8 @@ import hashlib
 import os
 import re
 
+from bipwrapper.type.ctype import CType
+
 from app.common.constants.globals import Globals
 
 
@@ -118,3 +120,16 @@ def get_yes_no_tuple(yes_id):
         (yes_id, "Evet"),
         (Globals.NO, "Hayır")
     ]
+
+
+def get_ctype_turkish(type: CType):
+    if CType.PHOTO == type:
+        return "fotoğrağrafla"
+    elif CType.VIDEO == type:
+        return "videoyla"
+    elif CType.CAPS == type:
+        return "caps ile"
+    elif CType.STICKER:
+        return "sticker ile"
+    else:
+        return "mesajla"
