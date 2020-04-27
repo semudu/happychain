@@ -68,6 +68,21 @@ def get_name_with_suffix(name) -> str:
             return "%s'e" % name
 
 
+def get_de_da_suffix(name) -> str:
+    vowels = 'aıouAIOUeiöüEİÖÜ'
+
+    if vowels.find(str(name[-1:])) != -1:
+        if vowels.find(str(name[-1:])) < 9:
+            return "%s da" % name
+        else:
+            return "%s de" % name
+    else:
+        if vowels.find(str(name[-2:-1])) < 9:
+            return "%s da" % name
+        else:
+            return "%s de" % name
+
+
 def get_name_with_own_suffix(name) -> str:
     vowels = 'aıouAIOUeiöüEİÖÜ'
 

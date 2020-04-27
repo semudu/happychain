@@ -88,8 +88,8 @@ def __send_message(request):
                                              Message.SAME_TEAM_LIMIT % Globals.SEND_SAME_TEAM_LIMIT)
                 return
             else:
-                target_user = database.get_user_by_id(target_user_id)
                 if message_id == Globals.FREE_MSG_ID:
+                    target_user = database.get_user_by_id(target_user_id)
                     Cache.put(Keys.FREE_MSG_BY_USER_ID % user_id, target_user_id)
                     Cache.put(Keys.START_CACHED_TRANSACTION_BY_USER_ID % user_id, True)
                     bip.single.send_text_message(request.sender,

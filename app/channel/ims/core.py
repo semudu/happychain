@@ -87,48 +87,56 @@ def send_last_n(request, func):
         bip.single.send_text_message(request.sender, text)
 
 
-def finish_transaction_message(msisdn, user_id, target_user, message_id, content: MessageContent = None):
-    if message_id == Globals.FREE_MSG_ID and content is not None and content.type != CType.TEXT:
-        if content.type in [CType.VIDEO, CType.PHOTO, CType.CAPS, CType.STICKER]:
-            database.transfer_points(user_id, target_user["id"], message_id, MessageType.IMS, content)
-
+def finish_transaction_message(msisdn, user_id, target_user_id, message_id, content: MessageContent = None):
+    target_user = database.get_user_by_id(target_user_id)
+    if content is not None:  # message_id = free_message_id
+        if content.type not in [CType.TEXT, CType.VIDEO, CType.PHOTO, CType.CAPS, CType.STICKER]:
+            bip.single.send_text_message(msisdn, Message.WRONG_CONTENT)
+            return
         else:
-            pass
+            if content.type == CType.TEXT:
+                bip.single.send_text_message(target_user["msisdn"], content.message)
+            elif content.type == CType.PHOTO:
+                bip.single.send_image(target_user["msisdn"], content.message, 1, 1)
+            elif content.type == CType.VIDEO:
+                bip.single.send_video(target_user["msisdn"], content.message, 1, 1)
+            elif content.type == CType.CAPS:
+                bip.single.send_caps(target_user["msisdn"], content.message, "1", 1, 1)
+            elif content.type == CType.STICKER:
+                bip.single.send_sticker(target_user["msisdn"], content.message, "1")
     else:
-        database.transfer_points(user_id, target_user["id"], message_id, MessageType.IMS, content)
-        message = content.message if content is not None else database.get_message_by_id(message_id)
-        balance = database.get_balance_by_user_id(user_id)
+        message = database.get_message_by_id(message_id)
+        bip.single.send_text_message(target_user["msisdn"], message)
 
-        bip.single.send_text_message(msisdn, Message.SENT_MESSAGE
-                                     % (get_name_with_suffix(target_user["first_name"]),
-                                        message,
-                                        Globals.SEND_AMOUNT,
-                                        Globals.EARN_AMOUNT,
-                                        "{:.{}f}".format(balance, 2)))
+    database.transfer_points(user_id, target_user_id, message_id, MessageType.IMS, content)
+    balance = database.get_balance_by_user_id(user_id)
+    bip.single.send_text_message(msisdn, Message.SENT_MESSAGE
+                                 % (get_name_with_suffix(target_user["first_name"]),
+                                    Globals.SEND_AMOUNT,
+                                    Globals.EARN_AMOUNT,
+                                    "{:.{}f}".format(balance, 2)))
 
-        user = database.get_user_by_id(user_id)
+    user = database.get_user_by_id(user_id)
 
-        if Cache.get(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"])):
-            bip.single.send_text_message(
-                target_user["msisdn"],
-                Message.QUICK_REPLY_TITLE % (
-                    user["full_name"], Globals.SEND_AMOUNT, message))
-            Cache.delete(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"]))
-        else:
-            yes_no_tuple = [
-                (user_id, "Tabiki! 😊"),
-                (Globals.NO, "Sonra yollarım... 🙄 ")
-            ]
+    if Cache.get(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"])):
+        bip.single.send_text_message(
+            target_user["msisdn"],
+            Message.QUICK_REPLY_TITLE % (
+                get_de_da_suffix(user["full_name"]), Globals.SEND_AMOUNT))
+        Cache.delete(Keys.QUICK_REPLY_BY_USER_IDS % (user_id, target_user["id"]))
+    else:
+        yes_no_tuple = [
+            (user_id, "Tabiki! 😊"),
+            (Globals.NO, "Sonra yollarım... 🙄 ")
+        ]
 
-            bip.single.send_poll_message(
-                target_user["msisdn"],
-                Command.QUICK_REPLY,
-                Message.QUICK_REPLY_TITLE % (user["full_name"], Globals.SEND_AMOUNT, message),
-                Message.QUICK_REPLY_DESC,
-                Message.QUICK_REPLY_IMAGE,
-                1,
-                PollType.SINGLE_CHOOSE,
-                yes_no_tuple,
-                "OK")
+        bip.single.send_poll_message_without_image(
+            target_user["msisdn"],
+            Command.QUICK_REPLY,
+            Message.QUICK_REPLY_TITLE % (user["full_name"], Globals.SEND_AMOUNT),
+            Message.QUICK_REPLY_DESC,
+            PollType.SINGLE_CHOOSE,
+            yes_no_tuple,
+            "OK")
 
-            Cache.put(Keys.QUICK_REPLY_BY_USER_IDS % (target_user["id"], user_id,), True)
+        Cache.put(Keys.QUICK_REPLY_BY_USER_IDS % (target_user["id"], user_id,), True)
