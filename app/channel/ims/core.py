@@ -90,19 +90,19 @@ def send_last_n(request, func):
 def finish_transaction_message(msisdn, user_id, target_user_id, message_id, content: MessageContent = None):
     target_user = database.get_user_by_id(target_user_id)
     if content is not None:  # message_id = free_message_id
-        if content.type not in [CType.TEXT, CType.VIDEO, CType.PHOTO, CType.CAPS, CType.STICKER]:
+        if content.ctype not in [CType.TEXT, CType.VIDEO, CType.PHOTO, CType.CAPS, CType.STICKER]:
             bip.single.send_text_message(msisdn, Message.WRONG_CONTENT)
             return
         else:
-            if content.type == CType.TEXT:
+            if content.ctype == CType.TEXT:
                 bip.single.send_text_message(target_user["msisdn"], content.message)
-            elif content.type == CType.PHOTO:
+            elif content.ctype == CType.PHOTO:
                 bip.single.send_image(target_user["msisdn"], content.message, 1, 1)
-            elif content.type == CType.VIDEO:
+            elif content.ctype == CType.VIDEO:
                 bip.single.send_video(target_user["msisdn"], content.message, 1, 1)
-            elif content.type == CType.CAPS:
+            elif content.ctype == CType.CAPS:
                 bip.single.send_caps(target_user["msisdn"], content.message, "1", 1, 1)
-            elif content.type == CType.STICKER:
+            elif content.ctype == CType.STICKER:
                 bip.single.send_sticker(target_user["msisdn"], content.message, "1")
     else:
         message = database.get_message_by_id(message_id)

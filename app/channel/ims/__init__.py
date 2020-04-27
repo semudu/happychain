@@ -93,9 +93,9 @@ def __send_message(request):
                     Cache.put(Keys.FREE_MSG_BY_USER_ID % user_id, target_user_id)
                     Cache.put(Keys.START_CACHED_TRANSACTION_BY_USER_ID % user_id, True)
                     bip.single.send_text_message(request.sender,
-                                                 Message.FREE_MESSAGE % target_user["first_name"])
+                                                 Message.FREE_MESSAGE % get_name_with_suffix(target_user["first_name"]))
                 else:
-                    finish_transaction_message(request.sender, user_id, target_user_id, message_id, balance)
+                    finish_transaction_message(request.sender, user_id, target_user_id, message_id)
 
         else:
             bip.single.send_text_message(request.sender, Message.INSUFFICIENT_FUNDS)

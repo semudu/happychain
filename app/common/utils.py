@@ -32,6 +32,10 @@ def split_to_array(value, delimeter):
     return [x.translate({ord(u'I'): u'ı', ord(u'İ'): u'i'}).lower() for x in re.split(delimeter, value)]
 
 
+def capitalize_each_word(value):
+    return value.translate({ord(u'I'): u'ı', ord(u'İ'): u'i'}).title()
+
+
 def convert_to_date(value, fmt='%d.%m.%Y %H:%M:%S.%f'):
     if isinstance(value, (datetime.date, datetime.datetime)):
         return value
@@ -55,6 +59,7 @@ def get_key_value_tuple(data: dict, key: str, value: str):
 
 def get_name_with_suffix(name) -> str:
     vowels = 'aıouAIOUeiöüEİÖÜ'
+    name = capitalize_each_word(name)
 
     if vowels.find(str(name[-1:])) != -1:
         if vowels.find(str(name[-1:])) < 9:
@@ -70,6 +75,7 @@ def get_name_with_suffix(name) -> str:
 
 def get_de_da_suffix(name) -> str:
     vowels = 'aıouAIOUeiöüEİÖÜ'
+    name = capitalize_each_word(name)
 
     if vowels.find(str(name[-1:])) != -1:
         if vowels.find(str(name[-1:])) < 9:
@@ -85,6 +91,7 @@ def get_de_da_suffix(name) -> str:
 
 def get_name_with_own_suffix(name) -> str:
     vowels = 'aıouAIOUeiöüEİÖÜ'
+    name = capitalize_each_word(name)
 
     if vowels.find(str(name[-1:])) != -1:
         if vowels.find(str(name[-1:])) < 9:

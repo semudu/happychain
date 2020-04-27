@@ -8,6 +8,10 @@ class MessageContent:
         self.content = content
 
     @property
+    def ctype(self):
+        return self.type
+
+    @property
     def message(self):
         return self.content
 
