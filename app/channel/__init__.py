@@ -4,7 +4,7 @@ from app.common.constants.command import get_command_map
 from app.common.models.bip_request import BipRequest
 
 from .ims.core import send_message_all, send_user_list as ims_user_list
-from .share.core import share_content, send_user_list as share_user_list
+from .share.core import share_text_only, send_user_list as share_user_list
 from .ims import command_map as ims_commands, finish_transaction_message
 from .share import command_map as share_commands
 from .admin import command_map as admin_commands
@@ -40,7 +40,7 @@ def __exist_cached_transaction(request, user):
         share_user_id = Cache.get(Keys.SHARE_A_CONTENT_BY_USER_ID % user_id)
         if share_user_id is not None:
             Cache.delete(Keys.SHARE_A_CONTENT_BY_USER_ID % user_id)
-            share_content(request, user_id, share_user_id)
+            share_text_only(request, user_id, share_user_id)
 
     return False
 

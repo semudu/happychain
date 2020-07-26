@@ -15,6 +15,7 @@ class Keys:
     SHARE_OWNER_CHOICE_BY_USER_ID = "share_owner_choise--user_id:%s"
     SHARE_A_CONTENT_BY_USER_ID = "share_a_content--user_id:%s"
     START_CACHED_TRANSACTION_BY_USER_ID = "start_cached_transaction--user_id:%s"
+    SHARED_MEDIA_URL_BY_USER_ID = "shared_media_url--user_id:%s"
 
 
 class Cache:

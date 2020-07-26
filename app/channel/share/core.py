@@ -65,20 +65,24 @@ def send_ext_user_list(msisdn, user_id, start_with, offset: int, user_list=None)
         "OK")
 
 
-def share_content(request: BipRequest, user_id, share_user_id):
-    if request.ctype in [CType.TEXT, CType.PHOTO, CType.VIDEO]:
-        scope_id = database.get_scope_id_by_user_id(user_id)
-        scope_users = database.get_scope_users_by_user_id_and_like_name(user_id)
-        messages = database.get_share_message_list_by_scope_id(scope_id)
+def share_media_with_text(request: BipRequest, user_id, share_user_id, media_url=None):
+    scope_id = database.get_scope_id_by_user_id(user_id)
+    scope_users = database.get_scope_users_by_user_id_and_like_name(user_id)
+    messages = database.get_share_message_list_by_scope_id(scope_id)
 
-        for target_user in scope_users:
-            target_user_id = target_user["id"]
-            if target_user_id != user_id and target_user_id != share_user_id:
-                if request.ctype == CType.TEXT:
-                    pass
-                    # TODO
+    for target_user in scope_users:
+        target_user_id = target_user["id"]
+        if target_user_id != user_id and target_user_id != share_user_id:
+            if request.ctype == CType.TEXT:
+                pass
+                # TODO
 
+
+def share_text_only(request: BipRequest, user_id, share_user_id):
+    if request.ctype in [CType.PHOTO, CType.VIDEO]:
+        Cache.put(Keys.SHARED_MEDIA_URL_BY_USER_ID % user_id, request.content)
+        bip.single.send_text_message(request.sender, Message.SHARE_TEXT)
+    elif request.ctype == CType.TEXT:
+        share_media_with_text(request, user_id, share_user_id)
     else:
         bip.single.send_text_message(request.sender, "Yazı, Fotoğraf ya da Video paylaşabilirsin.")
-
-# TODO
