@@ -7,6 +7,7 @@ from config import APP
 from bipwrapper.type.poll_type import PollType
 from app.common import bip, database
 from app.common.utils import *
+from app.common.service import get_report_file_info
 from app.common.log import get_logger
 from app.common.constants.globals import Globals
 from app.common.constants.message import Message
