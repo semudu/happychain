@@ -159,6 +159,9 @@ class Database:
 
     def get_scopes(self):
         return self.__fetchall(SQL.GET_SCOPES)
+    
+    def get_scope_admins(self):
+        return self.__fetchall(SQL.GET_SCOPE_ADMINS)
 
     def get_scope_by_user_id(self, user_id):
         result = self.__fetchall(SQL.GET_SCOPE_BY_USER_ID, (user_id,))
