@@ -31,6 +31,11 @@ def load_balance_job():
 def reset_balance_job():
     try:
         if pycron.is_now(Globals.RESET_BALANCE_CRON):
+            scope_admins = database.get_scope_admins()
+            for scope_admin in scope_admins:
+                file_info = get_report_file_info(scope_admin["scope_id"], scope_admin["scope_name"])
+                bip.single.send_document(scope_admin["msisdn"], file_info["name"], file_info["url"])
+            
             database.reset_balance_all(Globals.LOAD_BALANCE_AMOUNT)
             receivers = list(map(lambda msisdn: msisdn["msisdn"], database.get_all_msisdn_list()))
             bip.multi.send_text_message(receivers, Message.RESET_BALANCE_MESSAGE % Globals.LOAD_BALANCE_AMOUNT)
