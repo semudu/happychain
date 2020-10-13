@@ -4,6 +4,7 @@ class SQL:
     UPDATE_SCOPE = "update scope set name = %s where id = %s;"
     DELETE_SCOPE = "delete from scope where id = %s;"
     GET_SCOPES = "select * from scope;"
+    GET_SCOPE_ADMINS = "select u.id, u.msisdn, t.scope_id, s.name scope_name from user u, team t, scope s where u.team_id = t.id and s.id = t.scope_id and role = 'SCOPE_ADMIN'"
     GET_SCOPE_BY_USER_ID = "select s.* from scope s, team t, user u where t.scope_id = s.id and u.team_id = t.id and u.id = %s;"
 
     # ------------------ TEAM ------------------ #
